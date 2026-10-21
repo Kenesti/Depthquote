@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <<<<<<< HEAD
+<<<<<<< HEAD
     <script src="https://cdn.jsdelivr.net/npm/chart.js@5.0.0/dist/chart.umd.min.js"></script>
     <script>
         // Initialize Chart.js and register all required components
@@ -89,10 +90,28 @@
         };
     </script>
 >>>>>>> 4b1512ec39b8d36daf88451ff48f1e05b216172f
+=======
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@5.0.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    
+    <script>
+        if (typeof Chart !== 'undefined') {
+            Chart.register(
+                Chart.controllers.Candlestick,
+                Chart.elements.Candlestick,
+                Chart.scales.TimeScale,
+                Chart.scales.LinearScale,
+                Chart.plugins.Tooltip,
+                Chart.plugins.Legend
+            );
+        }
+    </script>
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
         <header class="header">
             <div class="header-content">
                 <div class="logo">
@@ -111,7 +130,6 @@
         </header>
 
         <div class="main-content">
-            <!-- Left Sidebar - Stock Selection -->
             <aside class="sidebar left-sidebar">
                 <div class="sidebar-header">
                     <h2><i class="fas fa-search"></i> Stock Selection</h2>
@@ -139,7 +157,10 @@
                 </div>
             </aside>
 
+<<<<<<< HEAD
             <!-- Main Analysis Area -->
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
             <main class="main-panel">
                 <div class="analysis-header">
                     <h1><i class="fas fa-chart-line"></i> Stock Analysis</h1>
@@ -162,6 +183,7 @@
                             <i class="fas fa-play"></i> Start Analysis
                         </button>
                     </div>
+<<<<<<< HEAD
                 </div>
 
                 <!-- Progress Bar -->
@@ -170,9 +192,17 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <div class="progress-steps" id="progressSteps"></div>
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
                 </div>
 
-                <!-- Results Display -->
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-steps" id="progressSteps"></div>
+                </div>
+
                 <div class="results-container" id="resultsContainer">
                     <div class="results-header">
                         <h2><i class="fas fa-chart-bar"></i> Analysis Results</h2>
@@ -181,12 +211,18 @@
                         </button>
                     </div>
                     
+<<<<<<< HEAD
                     <div class="results-grid" id="resultsGrid">
                         <!-- Results will be populated here -->
                     </div>
                 </div>
 
                 <!-- Chart Container -->
+=======
+                    <div class="results-grid" id="resultsGrid"></div>
+                </div>
+
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
                 <div class="chart-container" id="chartContainer">
                     <div class="chart-wrapper">
                         <canvas id="candlestickChart"></canvas>
@@ -194,7 +230,10 @@
                 </div>
             </main>
 
+<<<<<<< HEAD
             <!-- Right Sidebar - Analysis Summary -->
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
             <aside class="sidebar right-sidebar">
                 <div class="sidebar-header">
                     <h2><i class="fas fa-file-alt"></i> Analysis Summary</h2>
@@ -225,7 +264,10 @@
             </aside>
         </div>
 
+<<<<<<< HEAD
         <!-- Activity Log Modal -->
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
         <div class="modal" id="activityLogModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -238,7 +280,10 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Settings Modal -->
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
         <div class="modal" id="settingsModal">
             <div class="modal-content">
                 <div class="modal-header">

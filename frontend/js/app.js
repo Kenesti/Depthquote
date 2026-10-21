@@ -323,6 +323,7 @@ const charts = {
         const close = data.map(d => d.close);
         
 <<<<<<< HEAD
+<<<<<<< HEAD
         // Ensure Chart.js 5.0.0 candlestick components are registered
         if (typeof Chart !== 'undefined') {
             Chart.register(
@@ -332,6 +333,8 @@ const charts = {
                 Chart.scales.LinearScale
             );
 =======
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
         // Ensure candlestick controller is registered
         try {
             if (typeof Chart !== 'undefined') {
@@ -345,7 +348,10 @@ const charts = {
             }
         } catch (e) {
             console.warn('Chart registration in createCandlestickChart:', e.message);
+<<<<<<< HEAD
 >>>>>>> 4b1512ec39b8d36daf88451ff48f1e05b216172f
+=======
+>>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
         }
         
         return new Chart(ctx, {
