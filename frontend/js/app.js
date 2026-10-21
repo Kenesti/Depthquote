@@ -322,6 +322,16 @@ const charts = {
         const low = data.map(d => d.low);
         const close = data.map(d => d.close);
         
+        // Ensure Chart.js 5.0.0 candlestick components are registered
+        if (typeof Chart !== 'undefined') {
+            Chart.register(
+                Chart.controllers.Candlestick,
+                Chart.elements.Candlestick,
+                Chart.scales.TimeScale,
+                Chart.scales.LinearScale
+            );
+        }
+        
         return new Chart(ctx, {
             type: 'candlestick',
             data: {
