@@ -498,16 +498,21 @@ const stockSelection = {
     
     // Add stock to selection
     add: (symbol, name = null) => {
-        const existingIndex = state.selectedStocks.findIndex(s => s.symbol === symbol);
+        if (!symbol || symbol.trim() === '') {
+            return false;
+        }
+        
+        const cleanSymbol = symbol.toUpperCase().trim();
+        const existingIndex = state.selectedStocks.findIndex(s => s.symbol === cleanSymbol);
         
         if (existingIndex === -1) {
             state.selectedStocks.push({
-                symbol: symbol.toUpperCase(),
-                name: name || symbol.toUpperCase()
+                symbol: cleanSymbol,
+                name: name || cleanSymbol
             });
             
             stockSelection.render();
-            ui.addActivity(`Added ${symbol}`);
+            ui.addActivity(`Added ${cleanSymbol}`);
             return true;
         }
         
