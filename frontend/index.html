@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depthquote - Stock Analysis Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Depthquote</span>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="btn-icon" id="settingsBtn" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Sidebar - Stock Selection -->
+            <aside class="sidebar left-sidebar">
+                <div class="sidebar-header">
+                    <h2><i class="fas fa-search"></i> Stock Selection</h2>
+                </div>
+                
+                <div class="stock-search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="stockSearch" placeholder="Search stocks (e.g., PYPL, AAPL, TSLA)..." autocomplete="off">
+                        <button class="btn btn-primary" id="addStockBtn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    
+                    <div class="suggestions-dropdown" id="stockSuggestions">
+                        <div class="suggestions-list" id="suggestionsList"></div>
+                    </div>
+                </div>
+
+                <div class="selected-stocks">
+                    <h3><i class="fas fa-check-circle"></i> Selected Stocks</h3>
+                    <div class="stocks-list" id="selectedStocksList">
+                        <div class="empty-state">
+                            <i class="fas fa-info-circle"></i>
+                            <p>No stocks selected. Add stocks to begin analysis.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="time-period-selector">
+                    <h3><i class="fas fa-clock"></i> Time Period</h3>
+                    <div class="period-buttons">
+                        <button class="period-btn" data-period="1h">1 Hour</button>
+                        <button class="period-btn" data-period="6h">6 Hours</button>
+                        <button class="period-btn" data-period="1d">24 Hours</button>
+                        <button class="period-btn active" data-period="7d">7 Days</button>
+                        <button class="period-btn" data-period="1mo">1 Month</button>
+                        <button class="period-btn" data-period="1y">1 Year</button>
+                        <button class="period-btn" data-period="5y">5 Years</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="analyzeBtn">
+                    <i class="fas fa-play"></i> Run Analysis
+                </button>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-panel">
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-header">
+                        <h3><i class="fas fa-spinner fa-spin"></i> Analyzing...</h3>
+                        <button class="btn-icon" id="cancelAnalysis">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Initializing...</div>
+                    </div>
+                    <div class="progress-steps" id="progressSteps">
+                        <div class="step" data-step="0">
+                            <div class="step-icon"><i class="fas fa-check"></i></div>
+                            <div class="step-label">Validating stocks</div>
+                        </div>
+                        <div class="step" data-step="1">
+                            <div class="step-icon"><i class="fas fa-download"></i></div>
+                            <div class="step-label">Fetching data</div>
+                        </div>
+                        <div class="step" data-step="2">
+                            <div class="step-icon"><i class="fas fa-calculator"></i></div>
+                            <div class="step-label">Calculating indicators</div>
+                        </div>
+                        <div class="step" data-step="3">
+                            <div class="step-icon"><i class="fas fa-chart-candlestick"></i></div>
+                            <div class="step-label">Detecting patterns</div>
+                        </div>
+                        <div class="step" data-step="4">
+                            <div class="step-icon"><i class="fas fa-brain"></i></div>
+                            <div class="step-label">Running predictions</div>
+                        </div>
+                        <div class="step" data-step="5">
+                            <div class="step-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="step-label">Generating recommendations</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Display -->
+                <div class="results-container" id="resultsContainer">
+                    <div class="results-header">
+                        <h2><i class="fas fa-chart-bar"></i> Depthquote Results</h2>
+                        <div class="results-actions">
+                            <button class="btn btn-secondary" id="exportJson">
+                                <i class="fas fa-file-export"></i> Export JSON
+                            </button>
+                            <button class="btn btn-secondary" id="exportPdf">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="summary-cards" id="summaryCards">
+                        <div class="empty-results">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>No analysis results yet</h3>
+                            <p>Select stocks and click "Run Analysis" to begin</p>
+                        </div>
+                    </div>
+
+                    <!-- Individual Stock Results -->
+                    <div class="stock-results" id="stockResults">
+                        <!-- Results will be inserted here -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar - Quick Stats -->
+            <aside class="sidebar right-sidebar">
+                <div class="sidebar-header">
+                    <h2><i class="fas fa-info-circle"></i> Depthquote Summary</h2>
+                </div>
+                
+                <div class="quick-stats" id="quickStats">
+                    <div class="stat-card">
+                        <div class="stat-icon bullish"><i class="fas fa-arrow-up"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="bullishCount">0</span>
+                            <span class="stat-label">Bullish</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bearish"><i class="fas fa-arrow-down"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="bearishCount">0</span>
+                            <span class="stat-label">Bearish</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon neutral"><i class="fas fa-minus"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="neutralCount">0</span>
+                            <span class="stat-label">Neutral</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="avgConfidence">0%</span>
+                            <span class="stat-label">Avg Confidence</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3><i class="fas fa-history"></i> Depthquote Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <div class="activity-item">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Ready to analyze</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="system-info">
+                    <h3><i class="fas fa-cogs"></i> System Status</h3>
+                    <div class="status-indicator">
+                        <span class="status-dot online"></span>
+                        <span>API Online</span>
+                    </div>
+                    <div class="status-indicator">
+                        <span class="status-dot online"></span>
+                        <span>Data Source: Yahoo Finance</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <button class="btn-icon close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Display Options</h3>
+                    <div class="setting-item">
+                        <label>Show Technical Indicators</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="showIndicators" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Show Pattern Analysis</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="showPatterns" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Show Predictions</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="showPredictions" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Show Interpretations</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="showInterpretations" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Detail Modal -->
+    <div class="modal large-modal" id="stockDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-chart-line"></i> <span id="detailSymbol">Stock</span> Analysis</h2>
+                <button class="btn-icon close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="stockDetailBody">
+                <!-- Detailed analysis content -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
