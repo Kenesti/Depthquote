@@ -257,6 +257,7 @@ body {
     border-radius: var(--radius-lg);
     padding: var(--spacing-sm) var(--spacing-md);
     transition: all var(--transition-fast);
+    width: 100%;
 }
 
 .search-box:focus-within {
@@ -267,6 +268,7 @@ body {
 .search-box i {
     color: var(--text-muted);
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
 .search-box input {
@@ -276,6 +278,7 @@ body {
     color: var(--text-primary);
     font-size: 0.95rem;
     outline: none;
+    min-width: 100px;
 }
 
 .search-box input::placeholder {
@@ -288,11 +291,14 @@ body {
 
 #stockSearch {
     min-width: 150px;
+    flex: 1;
 }
 
 #addStockBtn {
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: 0.85rem;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .suggestions-dropdown {
