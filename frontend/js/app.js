@@ -88,7 +88,6 @@ const state = {
 const elements = {
     // Stock Selection
     stockSearch: document.getElementById('stockSearch'),
-    addStockBtn: document.getElementById('addStockBtn'),
     suggestionsList: document.getElementById('suggestionsList'),
     selectedStocksList: document.getElementById('selectedStocksList'),
     
@@ -632,15 +631,6 @@ const ui = {
             setTimeout(() => {
                 ui.hideSuggestions();
             }, 200);
-        });
-        
-        elements.addStockBtn.addEventListener('click', () => {
-            const query = elements.stockSearch.value.trim();
-            if (query) {
-                stockSelection.add(query);
-                elements.stockSearch.value = '';
-                ui.hideSuggestions();
-            }
         });
         
         elements.stockSearch.addEventListener('keydown', (e) => {
