@@ -296,6 +296,16 @@ const api = {
 // Chart Functions
 // ===================================================================
 
+// Register financial chart types
+if (typeof Chart !== 'undefined') {
+    try {
+        // These are provided by chartjs-chart-financial
+        Chart.register(Chart.controllers.CandlestickController, Chart.controllers.OhlcController);
+    } catch (e) {
+        console.warn('Financial chart controllers not available:', e);
+    }
+}
+
 const charts = {
     // Chart colors
     colors: {
