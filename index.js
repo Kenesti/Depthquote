@@ -17,6 +17,9 @@ const predictionEngine = require('./lib/prediction');
 const DEFAULT_PORT = 3000;
 const FRONTEND_PATH = path.join(__dirname, 'frontend');
 
+// Global server reference to prevent process exit
+let serverInstance = null;
+
 class Depthquote {
   constructor() {
     this.apiService = apiService;
@@ -33,7 +36,7 @@ class Depthquote {
    * @returns {Promise<object>} Engine instance
    */
   async start(options = {}) {
-    const { port = DEFAULT_PORT, startApi = true, serveFrontend = false } = options;
+    const { port = DEFAULT_PORT, startApi = true, serveFrontend = true } = options;
 
     try {
       // Initialize all components
@@ -42,23 +45,35 @@ class Depthquote {
       // Start API server if requested
       if (startApi) {
         const server = await this.apiService.start(port);
-        console.log(`\nDepthquote server is running.`);
-        console.log(`API available at http://localhost:${port}/api`);
-        if (serveFrontend) {
-          console.log(`Frontend available at http://localhost:${port}`);
+        serverInstance = server;
+        
+        console.log(`\n========================================`);
+        console.log(`  Depthquote Server Started`);
+        console.log(`========================================`);
+        console.log(`\nAPI Server:  http://localhost:${port}/api`);
+        
+        // Check if frontend exists and serve it
+        if (serveFrontend && fs.existsSync(FRONTEND_PATH)) {
+          await this._serveFrontend(port);
+          console.log(`Frontend:   http://localhost:${port}`);
+        } else if (serveFrontend) {
+          console.log(`Frontend:   Not found at ${FRONTEND_PATH}`);
         }
-        console.log(`\nAvailable endpoints:`);
-        console.log(`  GET  /api/health           - Health check`);
-        console.log(`  POST /api/analyze          - Analyze stocks`);
+        
+        console.log(`\nAvailable API Endpoints:`);
+        console.log(`  GET  /api/health              - Health check`);
+        console.log(`  POST /api/analyze            - Analyze stocks`);
         console.log(`  GET  /api/historical/:symbol - Get historical data`);
-        console.log(`  GET  /api/indicators       - Calculate indicators`);
-        console.log(`  GET  /api/patterns         - Identify patterns`);
-        console.log(`  GET  /api/predictions      - Generate predictions`);
-        console.log(`\nPress Ctrl+C to stop the server.\n`);
+        console.log(`  GET  /api/indicators         - Calculate indicators`);
+        console.log(`  GET  /api/patterns           - Identify patterns`);
+        console.log(`  GET  /api/predictions        - Generate predictions`);
+        console.log(`\n========================================`);
+        console.log(`Press Ctrl+C to stop the server`);
+        console.log(`========================================\n`);
       }
 
       // Serve frontend if requested
-      if (serveFrontend) {
+      if (serveFrontend && fs.existsSync(FRONTEND_PATH)) {
         await this._serveFrontend(port);
       }
 
@@ -74,32 +89,26 @@ class Depthquote {
    * @param {number} port - Port to serve on
    * @returns {Promise}
    */
-  async _serveFrontend(port) {
+  async _serveFrontend() {
     // Check if frontend exists
     if (!fs.existsSync(FRONTEND_PATH)) {
       console.warn('Frontend directory not found. Skipping frontend service.');
       return;
     }
 
-    // Create express app for frontend
-    const frontendApp = express();
+    // Add frontend routes to the API server
+    this.apiService.app.use(express.static(FRONTEND_PATH));
     
-    // Serve static files
-    frontendApp.use(express.static(FRONTEND_PATH));
-    
-    // Serve index.html for all routes (SPA support)
-    frontendApp.get('*', (req, res) => {
+    // Serve index.html for all non-API routes (SPA support)
+    this.apiService.app.get('*', (req, res) => {
+      // Don't serve frontend for API routes
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'API endpoint not found' } });
+      }
       res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
     });
     
-    // Start frontend server
-    this.frontendServer = frontendApp.listen(port, () => {
-      console.log(`Depthquote frontend served on http://localhost:${port}`);
-    });
-    
-    this.frontendServer.on('error', (error) => {
-      console.error('Frontend Server Error:', error);
-    });
+    console.log(`Frontend files served from: ${FRONTEND_PATH}`);
   }
 
   /**
