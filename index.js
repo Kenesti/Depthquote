@@ -57,6 +57,19 @@ class Depthquote {
   }
 
   /**
+   * Initialize all components
+   */
+  async _initializeComponents() {
+    // Initialize TensorFlow for ML models if available
+    try {
+      const mlModels = require('./lib/prediction/machineLearningModels');
+      await mlModels.initialize();
+    } catch (error) {
+      console.warn('Machine learning models not available:', error.message);
+    }
+  }
+
+  /**
    * Stop the Depthquote application
    * @returns {Promise}
    */
