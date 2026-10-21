@@ -8,24 +8,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@5.0.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Initialize Chart.js and register all required components
+        // This must happen BEFORE loading any plugins
+        if (typeof Chart !== 'undefined') {
+            // Register built-in components needed for candlestick charts
+            Chart.register(
+                Chart.controllers.Candlestick,
+                Chart.elements.Candlestick,
+                Chart.scales.TimeScale,
+                Chart.scales.LinearScale,
+                Chart.plugins.Tooltip,
+                Chart.plugins.Legend
+            );
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-    <script>
-        // Register Chart.js 5.0.0 built-in candlestick controller and required components
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof Chart !== 'undefined') {
-                // Register all required components for candlestick charts
-                Chart.register(
-                    Chart.controllers.Candlestick,
-                    Chart.elements.Candlestick,
-                    Chart.scales.TimeScale,
-                    Chart.scales.LinearScale,
-                    Chart.plugins.Tooltip,
-                    Chart.plugins.Legend
-                );
-            }
-        });
-    </script>
 </head>
 <body>
     <div class="app-container">
