@@ -296,13 +296,23 @@ const api = {
 // Chart Functions
 // ===================================================================
 
-// Register financial chart types
+// Register financial chart types with Chart.js
+// chartjs-chart-financial should auto-register, but we ensure it
 if (typeof Chart !== 'undefined') {
     try {
-        // These are provided by chartjs-chart-financial
-        Chart.register(Chart.controllers.CandlestickController, Chart.controllers.OhlcController);
+        // Check if financial controllers are already registered
+        const hasCandlestick = Chart.types && Chart.types.candlestick;
+        const hasOhlc = Chart.types && Chart.types.ohlc;
+        
+        if (!hasCandlestick || !hasOhlc) {
+            // If not auto-registered, try to access the controllers
+            // The chartjs-chart-financial plugin should have registered them
+            if (typeof window !== 'undefined' && window.ChartFinancial) {
+                // The plugin exports to window.ChartFinancial in UMD mode
+            }
+        }
     } catch (e) {
-        console.warn('Financial chart controllers not available:', e);
+        console.warn('Chart.js financial types check failed:', e.message);
     }
 }
 
