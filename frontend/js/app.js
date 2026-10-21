@@ -220,13 +220,21 @@ const api = {
     // Fetch analysis for symbols
     async analyze(symbols, options = {}) {
         try {
+            // Validate symbols
+            const symbolList = Array.isArray(symbols) ? symbols : [symbols];
+            const validSymbols = symbolList.filter(s => s && s.trim() !== '');
+            
+            if (validSymbols.length === 0) {
+                throw new Error('No valid symbols provided');
+            }
+            
             const response = await fetch(`${CONFIG.API_BASE_URL}/analyze`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    symbols: Array.isArray(symbols) ? symbols : [symbols],
+                    symbols: validSymbols,
                     ...options
                 })
             });
