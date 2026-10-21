@@ -10,8 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@2.0.0/dist/chartjs-chart-financial.umd.min.js"></script>
     <script>
-        // chartjs-chart-financial auto-registers its controllers with Chart.js
-        // This ensures candlestick and ohlc chart types are available
+        // Explicitly register financial chart controllers
+        // chartjs-chart-financial v2.0.0 exports to ChartFinancial global
+        if (typeof ChartFinancial !== 'undefined') {
+            Chart.register(ChartFinancial.CandlestickController, ChartFinancial.OhlcController);
+        }
+        // Also register all Chart.js built-in registerables
         if (typeof Chart !== 'undefined' && Chart.registerables) {
             Chart.register(...Chart.registerables);
         }
