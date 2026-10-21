@@ -49,6 +49,28 @@ class Depthquote {
         serverInstance = server;
       }
 
+      console.log('\n========================================');
+      console.log('  Depthquote Server Started');
+      console.log('========================================');
+      console.log(`\nServer running at: http://localhost:${port}`);
+      console.log(`API available at:   http://localhost:${port}/api`);
+      
+      if (serveFrontend) {
+        const frontendPath = path.join(__dirname, 'frontend');
+        if (fs.existsSync(frontendPath)) {
+          console.log(`Frontend available at: http://localhost:${port}`);
+        }
+      }
+      
+      console.log('\nAvailable API Endpoints:');
+      console.log('  GET  /api/health              - Health check');
+      console.log('  POST /api/analyze            - Analyze stocks');
+      console.log('  GET  /api/historical/:symbol - Get historical data');
+      console.log('  GET  /api/indicators         - Calculate indicators');
+      console.log('  GET  /api/patterns           - Identify patterns');
+      console.log('  GET  /api/predictions        - Generate predictions');
+      console.log('\n========================================\n');
+
       return this;
     } catch (error) {
       console.error('Failed to start Depthquote:', error);
@@ -63,7 +85,9 @@ class Depthquote {
     // Initialize TensorFlow for ML models if available
     try {
       const mlModels = require('./lib/prediction/machineLearningModels');
-      await mlModels.initialize();
+      if (mlModels.initialize) {
+        await mlModels.initialize();
+      }
     } catch (error) {
       console.warn('Machine learning models not available:', error.message);
     }
@@ -220,29 +244,6 @@ if (require.main === module) {
   const serveFrontend = process.argv.includes('--no-frontend') ? false : true;
   
   depthquote.start({ port, serveFrontend })
-    .then(() => {
-      console.log('\n========================================');
-      console.log('  Depthquote Server Started');
-      console.log('========================================');
-      console.log(`\nServer running at: http://localhost:${port}`);
-      console.log(`API available at:   http://localhost:${port}/api`);
-      
-      const frontendPath = path.join(__dirname, 'frontend');
-      if (serveFrontend && fs.existsSync(frontendPath)) {
-        console.log(`Frontend available at: http://localhost:${port}`);
-      }
-      
-      console.log('\nAvailable API Endpoints:');
-      console.log('  GET  /api/health              - Health check');
-      console.log('  POST /api/analyze            - Analyze stocks');
-      console.log('  GET  /api/historical/:symbol - Get historical data');
-      console.log('  GET  /api/indicators         - Calculate indicators');
-      console.log('  GET  /api/patterns           - Identify patterns');
-      console.log('  GET  /api/predictions        - Generate predictions');
-      console.log('\n========================================');
-      console.log('Press Ctrl+C to stop the server');
-      console.log('========================================\n');
-    })
     .catch(error => {
       console.error('Failed to start server:', error);
       process.exit(1);
