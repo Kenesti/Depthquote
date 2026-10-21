@@ -1,14 +1,18 @@
 /**
  * API Service Module for Depthquote
  * Provides RESTful API endpoints for the stock analysis engine
+ * Uses Express.js to serve on localhost
  */
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 const analysisEngine = require('../lib/analysis');
 const dataScraper = require('../lib/data/dataScraper');
 const technicalIndicators = require('../lib/indicators');
 const patternRecognition = require('../lib/patterns');
+const predictionEngine = require('../lib/prediction');
 const { API_ENDPOINTS, ERROR_CODES, RATE_LIMITS } = require('../config/constants');
 
 class ApiService {
@@ -16,6 +20,7 @@ class ApiService {
     this.app = express();
     this.router = express.Router();
     this.rateLimiter = this._createRateLimiter();
+    this.server = null;
     this._setupMiddleware();
     this._setupRoutes();
   }
@@ -101,40 +106,36 @@ class ApiService {
     this.router.get(API_ENDPOINTS.ANALYZE, this._analyzeHandler.bind(this));
 
     // Historical data endpoints
-    this.router.get(API_ENDPOINTS.HISTORICAL_DATA, this._historicalDataHandler.bind(this));
-    this.router.get('/api/historical/:symbol', this._historicalSingleHandler.bind(this));
+    this.router.get(API_ENDPOINTS.HISTORICAL, this._historicalHandler.bind(this));
+    this.router.get(API_ENDPOINTS.HISTORICAL_SINGLE, this._historicalSingleHandler.bind(this));
 
-    // Indicators endpoint
+    // Indicator endpoints
     this.router.get(API_ENDPOINTS.INDICATORS, this._indicatorsHandler.bind(this));
-    this.router.get('/api/indicators/:symbol', this._indicatorsSingleHandler.bind(this));
+    this.router.get(API_ENDPOINTS.INDICATORS_SINGLE, this._indicatorsSingleHandler.bind(this));
 
-    // Patterns endpoint
+    // Pattern endpoints
     this.router.get(API_ENDPOINTS.PATTERNS, this._patternsHandler.bind(this));
+    this.router.get(API_ENDPOINTS.PATTERNS_SINGLE, this._patternsSingleHandler.bind(this));
 
-    // Predictions endpoint
+    // Prediction endpoints
     this.router.get(API_ENDPOINTS.PREDICTIONS, this._predictionsHandler.bind(this));
+    this.router.get(API_ENDPOINTS.PREDICTIONS_SINGLE, this._predictionsSingleHandler.bind(this));
 
-    // Root endpoint
-    this.router.get('/', (req, res) => {
-      res.json({
-        name: 'Depthquote API',
-        version: '1.0.0',
-        endpoints: Object.values(API_ENDPOINTS).map(endpoint => ({
-          path: endpoint,
-          method: 'GET/POST'
-        }))
-      });
-    });
+    // Info endpoints
+    this.router.get(API_ENDPOINTS.INFO, this._infoHandler.bind(this));
+    this.router.get(API_ENDPOINTS.SYMBOLS, this._symbolsHandler.bind(this));
   }
 
   /**
    * Health check handler
    */
-  _healthCheck(req, res) {
+  async _healthCheck(req, res) {
     res.json({
+      success: true,
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      version: '1.0.0'
+      version: '1.0.0',
+      name: 'Depthquote'
     });
   }
 
@@ -158,7 +159,8 @@ class ApiService {
 
       res.json({
         success: true,
-        results: Array.isArray(results) ? results : [results],
+        symbols: symbols,
+        results: results,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -167,30 +169,34 @@ class ApiService {
   }
 
   /**
-   * Historical data handler
+   * Historical handler
    */
-  async _historicalDataHandler(req, res) {
+  async _historicalHandler(req, res) {
     try {
-      const { symbol, period, interval } = req.query;
+      const { symbols, period, interval } = req.query;
 
-      if (!symbol) {
+      if (!symbols) {
         return res.status(400).json({
           error: {
             code: ERROR_CODES.INVALID_PARAMETERS,
-            message: 'Symbol parameter is required.'
+            message: 'Symbols parameter is required.'
           }
         });
       }
 
-      const data = await dataScraper.fetchHistoricalData(symbol, {
-        period: period || '1y',
-        interval: interval || '1d'
-      });
+      const symbolList = symbols.split(',').map(s => s.trim().toUpperCase());
+      const results = {};
+
+      for (const symbol of symbolList) {
+        results[symbol] = await dataScraper.fetchHistoricalData(symbol, {
+          period: period || '1y',
+          interval: interval || '1d'
+        });
+      }
 
       res.json({
         success: true,
-        symbol: symbol.toUpperCase(),
-        data: data,
+        data: results,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -377,6 +383,69 @@ class ApiService {
   }
 
   /**
+   * Patterns single symbol handler
+   */
+  async _patternsSingleHandler(req, res) {
+    try {
+      const { symbol } = req.params;
+      const { period, interval, patternType } = req.query;
+
+      if (!symbol) {
+        return res.status(400).json({
+          error: {
+            code: ERROR_CODES.INVALID_PARAMETERS,
+            message: 'Symbol parameter is required.'
+          }
+        });
+      }
+
+      const data = await dataScraper.fetchHistoricalData(symbol.toUpperCase(), {
+        period: period || '1y',
+        interval: interval || '1d'
+      });
+
+      const dataWithPatterns = await patternRecognition.identifyAll(data, {
+        includeSingle: true,
+        includeMulti: true
+      });
+
+      let patterns = [];
+      dataWithPatterns.forEach(bar => {
+        if (bar.patterns) {
+          bar.patterns.forEach(pattern => {
+            if (!patternType || pattern.type === patternType) {
+              patterns.push({
+                ...pattern,
+                date: bar.date
+              });
+            }
+          });
+        }
+        if (bar.chartPatterns) {
+          bar.chartPatterns.forEach(pattern => {
+            if (!patternType || pattern.type === patternType) {
+              patterns.push({
+                ...pattern,
+                date: bar.date
+              });
+            }
+          });
+        }
+      });
+
+      res.json({
+        success: true,
+        symbol: symbol.toUpperCase(),
+        patterns: patterns,
+        statistics: patternRecognition.getStatistics(dataWithPatterns),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this._handleError(res, error);
+    }
+  }
+
+  /**
    * Predictions handler
    */
   async _predictionsHandler(req, res) {
@@ -425,6 +494,113 @@ class ApiService {
   }
 
   /**
+   * Predictions single symbol handler
+   */
+  async _predictionsSingleHandler(req, res) {
+    try {
+      const { symbol } = req.params;
+      const { period, interval, models } = req.query;
+
+      if (!symbol) {
+        return res.status(400).json({
+          error: {
+            code: ERROR_CODES.INVALID_PARAMETERS,
+            message: 'Symbol parameter is required.'
+          }
+        });
+      }
+
+      const data = await dataScraper.fetchHistoricalData(symbol.toUpperCase(), {
+        period: period || '1y',
+        interval: interval || '1d'
+      });
+
+      const availableModels = predictionEngine.getAvailableModels();
+      const modelsToRun = models ?
+        models.split(',').filter(m => availableModels.all.includes(m)) :
+        availableModels.all;
+
+      const results = {};
+      for (const model of modelsToRun) {
+        try {
+          results[model] = await predictionEngine.predict(model, data, {
+            forecastHorizon: 5
+          });
+        } catch (error) {
+          results[model] = { error: error.message };
+        }
+      }
+
+      res.json({
+        success: true,
+        symbol: symbol.toUpperCase(),
+        predictions: results,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this._handleError(res, error);
+    }
+  }
+
+  /**
+   * Info handler
+   */
+  async _infoHandler(req, res) {
+    try {
+      res.json({
+        success: true,
+        name: 'Depthquote',
+        version: '1.0.0',
+        description: 'Professional Stock Analysis Platform',
+        availableIndicators: technicalIndicators.getAvailableIndicators(),
+        availableModels: predictionEngine.getAvailableModels(),
+        availablePatterns: patternRecognition.getAvailablePatterns(),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this._handleError(res, error);
+    }
+  }
+
+  /**
+   * Symbols handler
+   */
+  async _symbolsHandler(req, res) {
+    try {
+      const { symbols } = req.query;
+
+      if (!symbols) {
+        return res.status(400).json({
+          error: {
+            code: ERROR_CODES.INVALID_PARAMETERS,
+            message: 'Symbols parameter is required.'
+          }
+        });
+      }
+
+      const symbolList = symbols.split(',').map(s => s.trim().toUpperCase());
+      const results = {};
+
+      for (const symbol of symbolList) {
+        try {
+          const isValid = await dataScraper.validateSymbol(symbol);
+          results[symbol] = { valid: isValid };
+        } catch (error) {
+          results[symbol] = { valid: false, error: error.message };
+        }
+      }
+
+      res.json({
+        success: true,
+        symbols: results,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      this._handleError(res, error);
+    }
+  }
+
+  /**
    * Parse analyze request
    */
   _parseAnalyzeRequest(req) {
@@ -451,21 +627,21 @@ class ApiService {
   _handleError(res, error) {
     console.error('API Error:', error);
 
-    if (error.message.includes(ERROR_CODES.INVALID_SYMBOL)) {
+    if (error.message && error.message.includes(ERROR_CODES.INVALID_SYMBOL)) {
       res.status(404).json({
         error: {
           code: ERROR_CODES.INVALID_SYMBOL,
           message: 'Invalid stock symbol.'
         }
       });
-    } else if (error.message.includes(ERROR_CODES.DATA_NOT_AVAILABLE)) {
+    } else if (error.message && error.message.includes(ERROR_CODES.DATA_NOT_AVAILABLE)) {
       res.status(404).json({
         error: {
           code: ERROR_CODES.DATA_NOT_AVAILABLE,
           message: 'Data not available for the requested symbol.'
         }
       });
-    } else if (error.message.includes(ERROR_CODES.RATE_LIMITED)) {
+    } else if (error.message && error.message.includes(ERROR_CODES.RATE_LIMITED)) {
       res.status(429).json({
         error: {
           code: ERROR_CODES.RATE_LIMITED,
@@ -498,14 +674,36 @@ class ApiService {
   /**
    * Start the API server
    * @param {number} port - Port to listen on
+   * @param {boolean} serveFrontend - Whether to serve frontend files
    * @returns {Promise} Server instance
    */
-  async start(port = 3000) {
+  async start(port = 3000, serveFrontend = true) {
     return new Promise((resolve, reject) => {
       try {
+        // Serve frontend static files if requested
+        if (serveFrontend) {
+          const frontendPath = path.join(__dirname, '../frontend');
+          if (fs.existsSync(frontendPath)) {
+            this.app.use(express.static(frontendPath));
+            
+            // Serve index.html for all non-API routes (SPA support)
+            this.app.get('*', (req, res) => {
+              if (req.path.startsWith('/api')) {
+                return res.status(404).json({ 
+                  error: { code: 'NOT_FOUND', message: 'API endpoint not found' } 
+                });
+              }
+              res.sendFile(path.join(frontendPath, 'index.html'));
+            });
+            
+            console.log(`Frontend files served from: ${frontendPath}`);
+          } else {
+            console.log(`Frontend directory not found at: ${frontendPath}`);
+          }
+        }
+
         this.server = this.app.listen(port, () => {
           console.log(`Depthquote API server running at http://localhost:${port}`);
-          console.log(`Press Ctrl+C to stop the server`);
           resolve(this.server);
         });
 

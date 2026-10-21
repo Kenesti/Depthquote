@@ -1,6 +1,7 @@
 /**
  * Depthquote - Stock Analysis Engine
  * Main Entry Point - Orchestrates all components
+ * Uses Express.js to serve both API and frontend on localhost
  */
 
 const express = require('express');
@@ -17,7 +18,7 @@ const predictionEngine = require('./lib/prediction');
 const DEFAULT_PORT = 3000;
 const FRONTEND_PATH = path.join(__dirname, 'frontend');
 
-// Global server reference to prevent process exit
+// Global server reference
 let serverInstance = null;
 
 class Depthquote {
@@ -44,83 +45,14 @@ class Depthquote {
 
       // Start API server if requested
       if (startApi) {
-        const server = await this.apiService.start(port);
+        const server = await this.apiService.start(port, serveFrontend);
         serverInstance = server;
-        
-        console.log(`\n========================================`);
-        console.log(`  Depthquote Server Started`);
-        console.log(`========================================`);
-        console.log(`\nAPI Server:  http://localhost:${port}/api`);
-        
-        // Check if frontend exists and serve it
-        if (serveFrontend && fs.existsSync(FRONTEND_PATH)) {
-          await this._serveFrontend(port);
-          console.log(`Frontend:   http://localhost:${port}`);
-        } else if (serveFrontend) {
-          console.log(`Frontend:   Not found at ${FRONTEND_PATH}`);
-        }
-        
-        console.log(`\nAvailable API Endpoints:`);
-        console.log(`  GET  /api/health              - Health check`);
-        console.log(`  POST /api/analyze            - Analyze stocks`);
-        console.log(`  GET  /api/historical/:symbol - Get historical data`);
-        console.log(`  GET  /api/indicators         - Calculate indicators`);
-        console.log(`  GET  /api/patterns           - Identify patterns`);
-        console.log(`  GET  /api/predictions        - Generate predictions`);
-        console.log(`\n========================================`);
-        console.log(`Press Ctrl+C to stop the server`);
-        console.log(`========================================\n`);
-      }
-
-      // Serve frontend if requested
-      if (serveFrontend && fs.existsSync(FRONTEND_PATH)) {
-        await this._serveFrontend(port);
       }
 
       return this;
     } catch (error) {
       console.error('Failed to start Depthquote:', error);
       throw error;
-    }
-  }
-
-  /**
-   * Serve frontend static files
-   * @param {number} port - Port to serve on
-   * @returns {Promise}
-   */
-  async _serveFrontend() {
-    // Check if frontend exists
-    if (!fs.existsSync(FRONTEND_PATH)) {
-      console.warn('Frontend directory not found. Skipping frontend service.');
-      return;
-    }
-
-    // Add frontend routes to the API server
-    this.apiService.app.use(express.static(FRONTEND_PATH));
-    
-    // Serve index.html for all non-API routes (SPA support)
-    this.apiService.app.get('*', (req, res) => {
-      // Don't serve frontend for API routes
-      if (req.path.startsWith('/api')) {
-        return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'API endpoint not found' } });
-      }
-      res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
-    });
-    
-    console.log(`Frontend files served from: ${FRONTEND_PATH}`);
-  }
-
-  /**
-   * Initialize all components
-   */
-  async _initializeComponents() {
-    // Initialize TensorFlow for ML models if available
-    try {
-      const mlModels = require('./lib/prediction/machineLearningModels');
-      await mlModels.initialize();
-    } catch (error) {
-      console.warn('Machine learning models not available:', error.message);
     }
   }
 
@@ -268,3 +200,38 @@ class Depthquote {
 // Export singleton instance
 const depthquote = new Depthquote();
 module.exports = depthquote;
+
+// Start server if this file is run directly
+if (require.main === module) {
+  const port = process.env.PORT || 3000;
+  const serveFrontend = process.argv.includes('--no-frontend') ? false : true;
+  
+  depthquote.start({ port, serveFrontend })
+    .then(() => {
+      console.log('\n========================================');
+      console.log('  Depthquote Server Started');
+      console.log('========================================');
+      console.log(`\nServer running at: http://localhost:${port}`);
+      console.log(`API available at:   http://localhost:${port}/api`);
+      
+      const frontendPath = path.join(__dirname, 'frontend');
+      if (serveFrontend && fs.existsSync(frontendPath)) {
+        console.log(`Frontend available at: http://localhost:${port}`);
+      }
+      
+      console.log('\nAvailable API Endpoints:');
+      console.log('  GET  /api/health              - Health check');
+      console.log('  POST /api/analyze            - Analyze stocks');
+      console.log('  GET  /api/historical/:symbol - Get historical data');
+      console.log('  GET  /api/indicators         - Calculate indicators');
+      console.log('  GET  /api/patterns           - Identify patterns');
+      console.log('  GET  /api/predictions        - Generate predictions');
+      console.log('\n========================================');
+      console.log('Press Ctrl+C to stop the server');
+      console.log('========================================\n');
+    })
+    .catch(error => {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    });
+}
