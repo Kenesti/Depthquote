@@ -13,12 +13,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <script>
         // Register financial chart components - REQUIRED for candlestick charts
-        // chartjs-chart-financial v1.2.0 works with Chart.js 4.x
-        // It exports to ChartFinancial global in UMD mode
-        if (typeof Chart !== 'undefined' && typeof ChartFinancial !== 'undefined') {
+        // chartjs-chart-financial should auto-register with Chart.js
+        // We reference the controllers from Chart namespace after plugin loads
+        if (typeof Chart !== 'undefined') {
             Chart.register(
-                ChartFinancial.CandlestickController,
-                ChartFinancial.CandlestickElement
+                Chart.controllers.CandlestickController,
+                Chart.elements.CandlestickElement
             );
         }
     </script>
