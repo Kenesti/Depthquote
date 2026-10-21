@@ -298,23 +298,24 @@ const api = {
 
 // Register financial chart types with Chart.js
 // Chart.js 4.4.0+ has candlestick and ohlc built-in
-// chartjs-chart-financial v2.0.0 should auto-register them
+// We need to explicitly register them
 if (typeof Chart !== 'undefined') {
     try {
-        // Check if candlestick type is available
-        if (!Chart.types || !Chart.types.candlestick) {
-            // Try to register from ChartFinancial global (UMD export)
-            if (typeof ChartFinancial !== 'undefined') {
-                Chart.register(ChartFinancial);
-            }
-        }
-        
-        // Also ensure all built-in registerables are registered
+        // Register candlestick and ohlc chart types (built into Chart.js 4.4.0+)
+        // These are in Chart.registerables
         if (Chart.registerables) {
             Chart.register(...Chart.registerables);
         }
+        
+        // Also explicitly register financial types if they exist
+        if (Chart.controllers && Chart.controllers.CandlestickController) {
+            Chart.register(Chart.controllers.CandlestickController);
+        }
+        if (Chart.controllers && Chart.controllers.OhlcController) {
+            Chart.register(Chart.controllers.OhlcController);
+        }
     } catch (e) {
-        console.warn('Chart.js financial registration:', e.message);
+        console.warn('Chart.js registration error:', e.message);
     }
 }
 
