@@ -296,8 +296,8 @@ const api = {
 // Chart Functions
 // ===================================================================
 
-// Note: Candlestick controllers are now registered in index.html before app.js loads
-// This ensures they're available when charts are created
+// Note: Candlestick controllers are registered via chartjs-chart-financial plugin
+// which auto-registers with Chart.js
 
 const charts = {
     // Chart colors
