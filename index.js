@@ -1,0 +1,249 @@
+/**
+ * Depthquote - Stock Analysis Engine
+ * Main Entry Point - Orchestrates all components
+ */
+
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const apiService = require('./services/apiService');
+const analysisEngine = require('./lib/analysis');
+const dataScraper = require('./lib/data/dataScraper');
+const technicalIndicators = require('./lib/indicators');
+const patternRecognition = require('./lib/patterns');
+const predictionEngine = require('./lib/prediction');
+
+// Configuration
+const DEFAULT_PORT = 3000;
+const FRONTEND_PATH = path.join(__dirname, 'frontend');
+
+class Depthquote {
+  constructor() {
+    this.apiService = apiService;
+    this.analysisEngine = analysisEngine;
+    this.dataScraper = dataScraper;
+    this.technicalIndicators = technicalIndicators;
+    this.patternRecognition = patternRecognition;
+    this.predictionEngine = predictionEngine;
+  }
+
+  /**
+   * Start the Depthquote application
+   * @param {object} options - Start options
+   * @returns {Promise<object>} Engine instance
+   */
+  async start(options = {}) {
+    const { port = DEFAULT_PORT, startApi = true, serveFrontend = false } = options;
+
+    try {
+      // Initialize all components
+      await this._initializeComponents();
+
+      // Start API server if requested
+      if (startApi) {
+        await this.apiService.start(port);
+      }
+
+      // Serve frontend if requested
+      if (serveFrontend) {
+        await this._serveFrontend(port);
+      }
+
+      console.log('Depthquote started successfully');
+      return this;
+    } catch (error) {
+      console.error('Failed to start Depthquote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Serve frontend static files
+   * @param {number} port - Port to serve on
+   * @returns {Promise}
+   */
+  async _serveFrontend(port) {
+    // Check if frontend exists
+    if (!fs.existsSync(FRONTEND_PATH)) {
+      console.warn('Frontend directory not found. Skipping frontend service.');
+      return;
+    }
+
+    // Create express app for frontend
+    const frontendApp = express();
+    
+    // Serve static files
+    frontendApp.use(express.static(FRONTEND_PATH));
+    
+    // Serve index.html for all routes (SPA support)
+    frontendApp.get('*', (req, res) => {
+      res.sendFile(path.join(FRONTEND_PATH, 'index.html'));
+    });
+    
+    // Start frontend server
+    this.frontendServer = frontendApp.listen(port, () => {
+      console.log(`Depthquote frontend served on http://localhost:${port}`);
+    });
+    
+    this.frontendServer.on('error', (error) => {
+      console.error('Frontend Server Error:', error);
+    });
+  }
+
+  /**
+   * Initialize all components
+   */
+  async _initializeComponents() {
+    // Initialize TensorFlow for ML models if available
+    try {
+      const mlModels = require('./lib/prediction/machineLearningModels');
+      await mlModels.initialize();
+    } catch (error) {
+      console.warn('Machine learning models not available:', error.message);
+    }
+  }
+
+  /**
+   * Stop the Depthquote application
+   * @returns {Promise}
+   */
+  async stop() {
+    try {
+      await this.apiService.stop();
+      
+      // Stop frontend server if running
+      if (this.frontendServer) {
+        await new Promise((resolve, reject) => {
+          this.frontendServer.close((error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          });
+        });
+      }
+      
+      console.log('Depthquote stopped');
+    } catch (error) {
+      console.error('Error stopping Depthquote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Analyze a stock or list of stocks
+   * @param {string|string[]} symbols - Stock symbol(s) to analyze
+   * @param {object} options - Analysis options
+   * @returns {Promise<object|object[]>} Analysis results
+   */
+  async analyze(symbols, options = {}) {
+    return this.analysisEngine.analyze(symbols, options);
+  }
+
+  /**
+   * Get summary of analysis
+   * @param {object} result - Full analysis result
+   * @returns {object} Analysis summary
+   */
+  getSummary(result) {
+    return this.analysisEngine.getSummary(result);
+  }
+
+  /**
+   * Get historical data for a stock
+   * @param {string} symbol - Stock symbol
+   * @param {object} options - Data fetch options
+   * @returns {Promise<Array>} Historical data
+   */
+  async getHistoricalData(symbol, options = {}) {
+    return this.dataScraper.fetchHistoricalData(symbol, options);
+  }
+
+  /**
+   * Get current data for a stock
+   * @param {string} symbol - Stock symbol
+   * @returns {Promise<object>} Current data
+   */
+  async getCurrentData(symbol) {
+    return this.dataScraper.getCurrentData(symbol);
+  }
+
+  /**
+   * Get company information
+   * @param {string} symbol - Stock symbol
+   * @returns {Promise<object>} Company info
+   */
+  async getCompanyInfo(symbol) {
+    return this.dataScraper.getCompanyInfo(symbol);
+  }
+
+  /**
+   * Calculate technical indicators
+   * @param {Array} data - OHLCV data
+   * @param {object} options - Indicator options
+   * @returns {Promise<Array>} Data with indicators
+   */
+  async calculateIndicators(data, options = {}) {
+    return this.technicalIndicators.calculateAll(data, options);
+  }
+
+  /**
+   * Calculate specific indicator
+   * @param {Array} data - OHLCV data
+   * @param {string} indicatorName - Name of indicator
+   * @param {object} options - Indicator options
+   * @returns {Array} Data with the specified indicator
+   */
+  calculateIndicator(data, indicatorName, options = {}) {
+    return this.technicalIndicators.calculate(data, indicatorName, options);
+  }
+
+  /**
+   * Identify patterns in data
+   * @param {Array} data - OHLCV data
+   * @param {object} options - Pattern detection options
+   * @returns {Promise<Array>} Data with patterns
+   */
+  async identifyPatterns(data, options = {}) {
+    return patternRecognition.identifyAll(data, options);
+  }
+
+  /**
+   * Generate predictions
+   * @param {Array} data - OHLCV data
+   * @param {object} options - Prediction options
+   * @returns {Promise<object>} Prediction results
+   */
+  async predict(data, options = {}) {
+    return predictionEngine.predictAll(data, options);
+  }
+
+  /**
+   * Get available technical indicators
+   * @returns {Array} List of available indicators
+   */
+  getAvailableIndicators() {
+    return this.technicalIndicators.getAvailableIndicators();
+  }
+
+  /**
+   * Get available prediction models
+   * @returns {object} Available models by category
+   */
+  getAvailableModels() {
+    return this.predictionEngine.getAvailableModels();
+  }
+
+  /**
+   * Get available pattern types
+   * @returns {object} Available patterns by category
+   */
+  getAvailablePatterns() {
+    return patternRecognition.getAvailablePatterns();
+  }
+}
+
+// Export singleton instance
+const depthquote = new Depthquote();
+module.exports = depthquote;
