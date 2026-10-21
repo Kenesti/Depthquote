@@ -244,7 +244,9 @@ const api = {
                 throw new Error(error.error?.message || 'Analysis failed');
             }
             
-            return await response.json();
+            const data = await response.json();
+            // Extract results array from response
+            return data.results || data;
         } catch (error) {
             console.error('API Error:', error);
             throw error;
@@ -262,7 +264,9 @@ const api = {
                 throw new Error(error.error?.message || 'Failed to fetch historical data');
             }
             
-            return await response.json();
+            const data = await response.json();
+            // Extract data array from response
+            return data.data || data;
         } catch (error) {
             console.error('API Error:', error);
             throw error;
