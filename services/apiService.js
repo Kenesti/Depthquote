@@ -504,7 +504,8 @@ class ApiService {
     return new Promise((resolve, reject) => {
       try {
         this.server = this.app.listen(port, () => {
-          console.log(`Depthquote API started on port ${port}`);
+          console.log(`Depthquote API server running at http://localhost:${port}`);
+          console.log(`Press Ctrl+C to stop the server`);
           resolve(this.server);
         });
 

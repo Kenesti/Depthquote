@@ -41,7 +41,20 @@ class Depthquote {
 
       // Start API server if requested
       if (startApi) {
-        await this.apiService.start(port);
+        const server = await this.apiService.start(port);
+        console.log(`\nDepthquote server is running.`);
+        console.log(`API available at http://localhost:${port}/api`);
+        if (serveFrontend) {
+          console.log(`Frontend available at http://localhost:${port}`);
+        }
+        console.log(`\nAvailable endpoints:`);
+        console.log(`  GET  /api/health           - Health check`);
+        console.log(`  POST /api/analyze          - Analyze stocks`);
+        console.log(`  GET  /api/historical/:symbol - Get historical data`);
+        console.log(`  GET  /api/indicators       - Calculate indicators`);
+        console.log(`  GET  /api/patterns         - Identify patterns`);
+        console.log(`  GET  /api/predictions      - Generate predictions`);
+        console.log(`\nPress Ctrl+C to stop the server.\n`);
       }
 
       // Serve frontend if requested
@@ -49,7 +62,6 @@ class Depthquote {
         await this._serveFrontend(port);
       }
 
-      console.log('Depthquote started successfully');
       return this;
     } catch (error) {
       console.error('Failed to start Depthquote:', error);
