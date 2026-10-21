@@ -10,15 +10,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@2.0.0/dist/chartjs-chart-financial.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <script>
         // Register financial chart components - REQUIRED for candlestick charts
-        // chartjs-chart-financial v2.0.0 may not auto-register with Chart.js 4.x
-        // We register the entire ChartFinancial module which contains all needed components
+        // chartjs-chart-financial must be explicitly registered with Chart.js 4.x
         if (typeof Chart !== 'undefined' && typeof ChartFinancial !== 'undefined') {
-            Chart.register(ChartFinancial);
+            // Register CandlestickController and CandlestickElement
+            Chart.register(
+                ChartFinancial.CandlestickController,
+                ChartFinancial.CandlestickElement
+            );
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
     <div class="app-container">
