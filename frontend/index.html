@@ -12,22 +12,41 @@
     <script src="https://unpkg.com/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.umd.min.js"></script>
     <script>
         // Register financial chart components - REQUIRED for candlestick charts
-        // Using unpkg CDN instead of jsdelivr
-        // chartjs-chart-financial v1.2.0 auto-registers with Chart.js in UMD mode
-        // But we explicitly register to be sure
-        if (typeof Chart !== 'undefined') {
-            // Register all Chart.js built-in registerables first
-            if (Chart.registerables) {
-                Chart.register(...Chart.registerables);
-            }
-            // Then register financial components if available
-            if (typeof ChartFinancial !== 'undefined') {
-                Chart.register(
-                    ChartFinancial.CandlestickController,
-                    ChartFinancial.CandlestickElement
-                );
+        // After all plugins load, explicitly register candlestick type
+        // Try multiple approaches to find the controller
+        function registerCandlestick() {
+            try {
+                if (typeof Chart === 'undefined') return;
+                
+                // Approach 1: Try ChartFinancial namespace (UMD export)
+                if (typeof ChartFinancial !== 'undefined') {
+                    if (ChartFinancial.CandlestickController) {
+                        Chart.register(ChartFinancial.CandlestickController, ChartFinancial.CandlestickElement);
+                        return;
+                    }
+                }
+                
+                // Approach 2: Try Chart.controllers namespace
+                if (Chart.controllers && Chart.controllers.CandlestickController) {
+                    Chart.register(Chart.controllers.CandlestickController, Chart.elements.CandlestickElement);
+                    return;
+                }
+                
+                // Approach 3: Try Chart.types
+                if (Chart.types && Chart.types.candlestick) {
+                    // Already registered
+                    return;
+                }
+                
+                console.warn('Candlestick controller not found in any namespace');
+            } catch (e) {
+                console.error('Candlestick registration error:', e);
             }
         }
+        
+        // Register immediately and also after a delay
+        registerCandlestick();
+        setTimeout(registerCandlestick, 500);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
