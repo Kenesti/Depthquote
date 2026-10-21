@@ -31,6 +31,9 @@
     "moment": "^2.29.4",
     "yfinance": "^0.0.6"
   },
+  "optionalDependencies": {
+    "@tensorflow/tfjs-node": "^4.0.0"
+  },
   "devDependencies": {
     "eslint": "^8.55.0",
     "jest": "^29.7.0",
