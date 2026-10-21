@@ -7,48 +7,67 @@
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js and plugins - MUST load in this order -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
     <script src="https://unpkg.com/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    
     <script>
-        // Register financial chart components - REQUIRED for candlestick charts
-        // After all plugins load, explicitly register candlestick type
-        // Try multiple approaches to find the controller
-        function registerCandlestick() {
-            try {
-                if (typeof Chart === 'undefined') return;
-                
-                // Approach 1: Try ChartFinancial namespace (UMD export)
-                if (typeof ChartFinancial !== 'undefined') {
-                    if (ChartFinancial.CandlestickController) {
-                        Chart.register(ChartFinancial.CandlestickController, ChartFinancial.CandlestickElement);
+        // Register financial chart components for candlestick charts
+        // Use window.onload to ensure ALL scripts are fully loaded
+        window.onload = function() {
+            function registerCandlestick() {
+                try {
+                    if (typeof Chart === 'undefined') {
+                        console.error('Chart.js not loaded');
                         return;
                     }
+                    
+                    // Approach 1: ChartFinancial namespace (UMD export from chartjs-chart-financial)
+                    if (typeof ChartFinancial !== 'undefined' && ChartFinancial.CandlestickController) {
+                        Chart.register(ChartFinancial.CandlestickController, ChartFinancial.CandlestickElement);
+                        console.log('Chart.js: Registered ChartFinancial candlestick controller');
+                        return;
+                    }
+                    
+                    // Approach 2: Direct Chart namespace
+                    if (Chart.controllers && Chart.controllers.Candlestick) {
+                        Chart.register(Chart.controllers.Candlestick, Chart.elements.Candlestick);
+                        console.log('Chart.js: Registered Chart.controllers.Candlestick');
+                        return;
+                    }
+                    
+                    // Approach 3: With Controller suffix
+                    if (Chart.controllers && Chart.controllers.CandlestickController) {
+                        Chart.register(Chart.controllers.CandlestickController, Chart.elements.CandlestickElement);
+                        console.log('Chart.js: Registered Chart.controllers.CandlestickController');
+                        return;
+                    }
+                    
+                    // Approach 4: Already registered
+                    if (Chart.types && Chart.types.candlestick) {
+                        console.log('Chart.js: Candlestick type already registered');
+                        return;
+                    }
+                    
+                    // Debug: Show what's available
+                    console.error('Chart.js: Candlestick controller NOT FOUND');
+                    console.error('ChartFinancial:', typeof ChartFinancial);
+                    console.error('Chart.controllers:', Chart.controllers ? Object.keys(Chart.controllers) : 'undefined');
+                    console.error('Chart.elements:', Chart.elements ? Object.keys(Chart.elements) : 'undefined');
+                } catch (e) {
+                    console.error('Chart.js registration error:', e);
                 }
-                
-                // Approach 2: Try Chart.controllers namespace
-                if (Chart.controllers && Chart.controllers.CandlestickController) {
-                    Chart.register(Chart.controllers.CandlestickController, Chart.elements.CandlestickElement);
-                    return;
-                }
-                
-                // Approach 3: Try Chart.types
-                if (Chart.types && Chart.types.candlestick) {
-                    // Already registered
-                    return;
-                }
-                
-                console.warn('Candlestick controller not found in any namespace');
-            } catch (e) {
-                console.error('Candlestick registration error:', e);
             }
-        }
-        
-        // Register immediately and also after a delay
-        registerCandlestick();
-        setTimeout(registerCandlestick, 500);
+            
+            // Try registration at multiple intervals
+            registerCandlestick();
+            setTimeout(registerCandlestick, 200);
+            setTimeout(registerCandlestick, 500);
+        };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -97,221 +116,153 @@
                         </div>
                     </div>
                 </div>
+            </aside>
 
-                <div class="time-period-selector">
-                    <h3><i class="fas fa-clock"></i> Time Period</h3>
-                    <div class="period-buttons">
-                        <button class="period-btn" data-period="1h">1 Hour</button>
-                        <button class="period-btn" data-period="6h">6 Hours</button>
-                        <button class="period-btn" data-period="1d">24 Hours</button>
-                        <button class="period-btn active" data-period="7d">7 Days</button>
-                        <button class="period-btn" data-period="1mo">1 Month</button>
-                        <button class="period-btn" data-period="1y">1 Year</button>
-                        <button class="period-btn" data-period="5y">5 Years</button>
+            <!-- Main Analysis Area -->
+            <main class="main-panel">
+                <div class="analysis-header">
+                    <h1><i class="fas fa-chart-line"></i> Stock Analysis</h1>
+                    
+                    <div class="analysis-controls">
+                        <div class="time-period-selector">
+                            <span><i class="fas fa-clock"></i> Time Period:</span>
+                            <select id="timePeriod">
+                                <option value="1h">1 Hour</option>
+                                <option value="6h">6 Hours</option>
+                                <option value="24h">24 Hours</option>
+                                <option value="7d" selected>7 Days</option>
+                                <option value="1mo">1 Month</option>
+                                <option value="1y">1 Year</option>
+                                <option value="5y">5 Years</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="startAnalysisBtn">
+                            <i class="fas fa-play"></i> Start Analysis
+                        </button>
                     </div>
                 </div>
 
-                <button class="btn btn-primary btn-full" id="analyzeBtn">
-                    <i class="fas fa-play"></i> Run Analysis
-                </button>
-            </aside>
-
-            <!-- Main Content Area -->
-            <main class="main-panel">
                 <!-- Progress Bar -->
-                <div class="progress-container" id="progressContainer">
-                    <div class="progress-header">
-                        <h3><i class="fas fa-spinner fa-spin"></i> Analyzing...</h3>
-                        <button class="btn-icon" id="cancelAnalysis">
-                            <i class="fas fa-times"></i>
-                        </button>
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
                     </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progressBar">
-                            <div class="progress-fill" id="progressFill"></div>
-                        </div>
-                        <div class="progress-text" id="progressText">Initializing...</div>
-                    </div>
-                    <div class="progress-steps" id="progressSteps">
-                        <div class="step" data-step="0">
-                            <div class="step-icon"><i class="fas fa-check"></i></div>
-                            <div class="step-label">Validating stocks</div>
-                        </div>
-                        <div class="step" data-step="1">
-                            <div class="step-icon"><i class="fas fa-download"></i></div>
-                            <div class="step-label">Fetching data</div>
-                        </div>
-                        <div class="step" data-step="2">
-                            <div class="step-icon"><i class="fas fa-calculator"></i></div>
-                            <div class="step-label">Calculating indicators</div>
-                        </div>
-                        <div class="step" data-step="3">
-                            <div class="step-icon"><i class="fas fa-chart-candlestick"></i></div>
-                            <div class="step-label">Detecting patterns</div>
-                        </div>
-                        <div class="step" data-step="4">
-                            <div class="step-icon"><i class="fas fa-brain"></i></div>
-                            <div class="step-label">Running predictions</div>
-                        </div>
-                        <div class="step" data-step="5">
-                            <div class="step-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="step-label">Generating recommendations</div>
-                        </div>
-                    </div>
+                    <div class="progress-steps" id="progressSteps"></div>
                 </div>
 
                 <!-- Results Display -->
                 <div class="results-container" id="resultsContainer">
                     <div class="results-header">
-                        <h2><i class="fas fa-chart-bar"></i> Depthquote Results</h2>
-                        <div class="results-actions">
-                            <button class="btn btn-secondary" id="exportJson">
-                                <i class="fas fa-file-export"></i> Export JSON
-                            </button>
-                            <button class="btn btn-secondary" id="exportPdf">
-                                <i class="fas fa-file-pdf"></i> Export PDF
-                            </button>
-                        </div>
+                        <h2><i class="fas fa-chart-bar"></i> Analysis Results</h2>
+                        <button class="btn btn-secondary" id="exportBtn">
+                            <i class="fas fa-download"></i> Export JSON
+                        </button>
                     </div>
-
-                    <!-- Summary Cards -->
-                    <div class="summary-cards" id="summaryCards">
-                        <div class="empty-results">
-                            <i class="fas fa-chart-line"></i>
-                            <h3>No analysis results yet</h3>
-                            <p>Select stocks and click "Run Analysis" to begin</p>
-                        </div>
+                    
+                    <div class="results-grid" id="resultsGrid">
+                        <!-- Results will be populated here -->
                     </div>
+                </div>
 
-                    <!-- Individual Stock Results -->
-                    <div class="stock-results" id="stockResults">
-                        <!-- Results will be inserted here -->
+                <!-- Chart Container -->
+                <div class="chart-container" id="chartContainer">
+                    <div class="chart-wrapper">
+                        <canvas id="candlestickChart"></canvas>
                     </div>
                 </div>
             </main>
 
-            <!-- Right Sidebar - Quick Stats -->
+            <!-- Right Sidebar - Analysis Summary -->
             <aside class="sidebar right-sidebar">
                 <div class="sidebar-header">
-                    <h2><i class="fas fa-info-circle"></i> Depthquote Summary</h2>
+                    <h2><i class="fas fa-file-alt"></i> Analysis Summary</h2>
                 </div>
                 
-                <div class="quick-stats" id="quickStats">
-                    <div class="stat-card">
-                        <div class="stat-icon bullish"><i class="fas fa-arrow-up"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="bullishCount">0</span>
-                            <span class="stat-label">Bullish</span>
+                <div class="summary-content" id="summaryContent">
+                    <div class="summary-card">
+                        <h3><i class="fas fa-chart-line"></i> Overall Sentiment</h3>
+                        <div class="sentiment-display" id="overallSentiment">
+                            <p>Select stocks and click "Start Analysis" to see results.</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bearish"><i class="fas fa-arrow-down"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="bearishCount">0</span>
-                            <span class="stat-label">Bearish</span>
+                    
+                    <div class="summary-card">
+                        <h3><i class="fas fa-lightbulb"></i> Key Insights</h3>
+                        <ul class="insights-list" id="insightsList">
+                            <li>Analysis will appear here</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Alerts</h3>
+                        <div class="alerts-container" id="alertsContainer">
+                            <p>No alerts yet</p>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon neutral"><i class="fas fa-minus"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="neutralCount">0</span>
-                            <span class="stat-label">Neutral</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="avgConfidence">0%</span>
-                            <span class="stat-label">Avg Confidence</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="recent-activity">
-                    <h3><i class="fas fa-history"></i> Depthquote Activity</h3>
-                    <div class="activity-list" id="activityList">
-                        <div class="activity-item">
-                            <i class="fas fa-info-circle"></i>
-                            <span>Ready to analyze</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="system-info">
-                    <h3><i class="fas fa-cogs"></i> System Status</h3>
-                    <div class="status-indicator">
-                        <span class="status-dot online"></span>
-                        <span>API Online</span>
-                    </div>
-                    <div class="status-indicator">
-                        <span class="status-dot online"></span>
-                        <span>Data Source: Yahoo Finance</span>
                     </div>
                 </div>
             </aside>
         </div>
-    </div>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-cog"></i> Settings</h2>
-                <button class="btn-icon close-modal"><i class="fas fa-times"></i></button>
+        <!-- Activity Log Modal -->
+        <div class="modal" id="activityLogModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-list"></i> Activity Log</h2>
+                    <button class="btn-close" id="closeLogModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="log-container" id="logContainer"></div>
+                </div>
             </div>
-            <div class="modal-body">
-                <div class="settings-section">
-                    <h3>Display Options</h3>
-                    <div class="setting-item">
-                        <label>Show Technical Indicators</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="showIndicators" checked>
-                            <span class="toggle-slider"></span>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                    <button class="btn-close" id="closeSettingsModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3><i class="fas fa-eye"></i> Display Options</h3>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="showRawData" checked>
+                                <span>Show Raw Data</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="showInterpretations" checked>
+                                <span>Show Interpretations</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="showCharts" checked>
+                                <span>Show Charts</span>
+                            </label>
                         </div>
                     </div>
-                    <div class="setting-item">
-                        <label>Show Pattern Analysis</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="showPatterns" checked>
-                            <span class="toggle-slider"></span>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <label>Show Predictions</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="showPredictions" checked>
-                            <span class="toggle-slider"></span>
-                        </div>
-                    </div>
-                    <div class="setting-item">
-                        <label>Show Interpretations</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="showInterpretations" checked>
-                            <span class="toggle-slider"></span>
+                    
+                    <div class="settings-section">
+                        <h3><i class="fas fa-palette"></i> Theme</h3>
+                        <div class="theme-options">
+                            <button class="theme-btn" id="darkThemeBtn">
+                                <i class="fas fa-moon"></i> Dark
+                            </button>
+                            <button class="theme-btn" id="lightThemeBtn">
+                                <i class="fas fa-sun"></i> Light
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary close-modal">Cancel</button>
-                <button class="btn btn-primary" id="saveSettings">Save Settings</button>
-            </div>
         </div>
-    </div>
 
-    <!-- Stock Detail Modal -->
-    <div class="modal large-modal" id="stockDetailModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-chart-line"></i> <span id="detailSymbol">Stock</span> Analysis</h2>
-                <button class="btn-icon close-modal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body" id="stockDetailBody">
-                <!-- Detailed analysis content -->
-            </div>
-        </div>
+        <script src="js/app.js"></script>
     </div>
-
-    <script src="js/app.js"></script>
 </body>
 </html>

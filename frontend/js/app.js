@@ -322,6 +322,21 @@ const charts = {
         const low = data.map(d => d.low);
         const close = data.map(d => d.close);
         
+        // Ensure candlestick controller is registered
+        try {
+            if (typeof Chart !== 'undefined') {
+                if (typeof ChartFinancial !== 'undefined' && ChartFinancial.CandlestickController) {
+                    Chart.register(ChartFinancial.CandlestickController, ChartFinancial.CandlestickElement);
+                } else if (Chart.controllers && Chart.controllers.Candlestick) {
+                    Chart.register(Chart.controllers.Candlestick, Chart.elements.Candlestick);
+                } else if (Chart.controllers && Chart.controllers.CandlestickController) {
+                    Chart.register(Chart.controllers.CandlestickController, Chart.elements.CandlestickElement);
+                }
+            }
+        } catch (e) {
+            console.warn('Chart registration in createCandlestickChart:', e.message);
+        }
+        
         return new Chart(ctx, {
             type: 'candlestick',
             data: {
