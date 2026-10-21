@@ -73,12 +73,18 @@ module.exports = {
   
   // API endpoints
   API_ENDPOINTS: {
-    ANALYZE: '/api/analyze',
-    HISTORICAL_DATA: '/api/historical',
-    INDICATORS: '/api/indicators',
-    PATTERNS: '/api/patterns',
-    PREDICTIONS: '/api/predictions',
-    HEALTH: '/api/health'
+    ANALYZE: '/analyze',
+    HISTORICAL: '/historical',
+    HISTORICAL_SINGLE: '/historical/:symbol',
+    INDICATORS: '/indicators',
+    INDICATORS_SINGLE: '/indicators/:symbol',
+    PATTERNS: '/patterns',
+    PATTERNS_SINGLE: '/patterns/:symbol',
+    PREDICTIONS: '/predictions',
+    PREDICTIONS_SINGLE: '/predictions/:symbol',
+    HEALTH: '/health',
+    INFO: '/info',
+    SYMBOLS: '/symbols'
   },
   
   // Rate limiting
