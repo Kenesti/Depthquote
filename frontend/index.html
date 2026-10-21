@@ -12,6 +12,9 @@
     <script>
         // chartjs-chart-financial auto-registers its controllers with Chart.js
         // This ensures candlestick and ohlc chart types are available
+        if (typeof Chart !== 'undefined' && Chart.registerables) {
+            Chart.register(...Chart.registerables);
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
