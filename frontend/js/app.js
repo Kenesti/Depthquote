@@ -115,6 +115,7 @@ const elements = {
     stockResults: getEl('stockResults'),
     
     // Quick Stats
+    quickStats: getEl('quickStats'),
     bullishCount: getEl('bullishCount'),
     bearishCount: getEl('bearishCount'),
     neutralCount: getEl('neutralCount'),
