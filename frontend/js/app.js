@@ -824,7 +824,7 @@ const ui = {
                             <div class="stock-result-section">
                                 <h4><i class="fas fa-calculator"></i> Technical Indicators</h4>
                                 <div class="indicator-list">
-                                    ${ui.renderIndicators(result.technical?.indicators || {})}
+                                    ${ui.renderIndicators(result.technicalAnalysis?.summary?.indicators || {})}
                                 </div>
                             </div>
                             ` : ''}
@@ -836,23 +836,23 @@ const ui = {
                                 <div class="indicator-list">
                                     <div class="indicator-item">
                                         <span class="indicator-label">Candle Bullish</span>
-                                        <span class="indicator-value">${result.patterns?.candle?.bullish || 0}</span>
+                                        <span class="indicator-value">${result.patternAnalysis?.statistics?.candle?.bullish || 0}</span>
                                     </div>
                                     <div class="indicator-item">
                                         <span class="indicator-label">Candle Bearish</span>
-                                        <span class="indicator-value">${result.patterns?.candle?.bearish || 0}</span>
+                                        <span class="indicator-value">${result.patternAnalysis?.statistics?.candle?.bearish || 0}</span>
                                     </div>
                                     <div class="indicator-item">
                                         <span class="indicator-label">Candle Neutral</span>
-                                        <span class="indicator-value">${result.patterns?.candle?.neutral || 0}</span>
+                                        <span class="indicator-value">${result.patternAnalysis?.statistics?.candle?.neutral || 0}</span>
                                     </div>
                                     <div class="indicator-item">
                                         <span class="indicator-label">Chart Bullish</span>
-                                        <span class="indicator-value">${result.patterns?.chart?.bullish || 0}</span>
+                                        <span class="indicator-value">${result.patternAnalysis?.statistics?.chart?.bullish || 0}</span>
                                     </div>
                                     <div class="indicator-item">
                                         <span class="indicator-label">Chart Bearish</span>
-                                        <span class="indicator-value">${result.patterns?.chart?.bearish || 0}</span>
+                                        <span class="indicator-value">${result.patternAnalysis?.statistics?.chart?.bearish || 0}</span>
                                     </div>
                                 </div>
                             </div>
@@ -865,7 +865,7 @@ const ui = {
                                 <div class="indicator-list">
                                     <div class="indicator-item">
                                         <span class="indicator-label">Predicted Price</span>
-                                        <span class="indicator-value">${utils.formatPrice(result.prediction || 0)}</span>
+                                        <span class="indicator-value">${utils.formatPrice(result.predictions?.combined?.nextPrice || result.prediction || 0)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -876,7 +876,7 @@ const ui = {
                         ${state.settings.showInterpretations ? `
                         <div class="interpretation-section">
                             <h4><i class="fas fa-lightbulb"></i> Analysis Interpretations</h4>
-                            ${ui.renderInterpretations(result.interpretations || {})}
+                            ${ui.renderInterpretations(result.recommendations?.overall?.summary ? {overall: result.recommendations.overall.summary, technical: result.technicalAnalysis?.summary?.interpretations, patterns: result.patternAnalysis?.interpretation} : {})}
                         </div>
                         ` : ''}
                         
@@ -972,6 +972,12 @@ const ui = {
     // Show stock detail modal
     showStockDetail: (index) => {
         const result = state.analysisResults[index];
+        const recommendations = result.recommendations || {};
+        const overall = recommendations.overall || {};
+        const priceTargets = recommendations.priceTargets || {};
+        const riskMetrics = recommendations.riskMetrics || {};
+        const currentData = result.currentData || {};
+        const companyInfo = result.companyInfo || {};
         
         elements.detailSymbol.textContent = result.symbol || 'N/A';
         
@@ -988,21 +994,21 @@ const ui = {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Company</span>
-                            <span class="detail-value">${result.company || 'N/A'}</span>
+                            <span class="detail-value">${companyInfo.name || result.company || 'N/A'}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Current Price</span>
-                            <span class="detail-value">${utils.formatPrice(result.currentPrice || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(currentData.close || currentData.price || result.currentPrice || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Signal</span>
-                            <span class="detail-value badge ${utils.getSignalClass(result.overallSignal || 'neutral')}">
-                                ${utils.capitalize(result.overallSignal || 'neutral')}
+                            <span class="detail-value badge ${utils.getSignalClass(overall.signal || result.overallSignal || 'neutral')}">
+                                ${utils.capitalize(overall.signal || result.overallSignal || 'neutral')}
                             </span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Confidence</span>
-                            <span class="detail-value">${result.confidence || 0}%</span>
+                            <span class="detail-value">${overall.confidence || result.confidence || 0}%</span>
                         </div>
                     </div>
                 </div>
@@ -1013,23 +1019,23 @@ const ui = {
                     <div class="detail-grid">
                         <div class="detail-item">
                             <span class="detail-label">Buy Target</span>
-                            <span class="detail-value">${utils.formatPrice(result.buyTarget || result.recommendations?.buyTarget || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(priceTargets.buy || result.buyTarget || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Sell Target</span>
-                            <span class="detail-value">${utils.formatPrice(result.sellTarget || result.recommendations?.sellTarget || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(priceTargets.sell || result.sellTarget || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Stop Loss</span>
-                            <span class="detail-value">${utils.formatPrice(result.stopLoss || result.recommendations?.stopLoss || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(riskMetrics.stopLoss || result.stopLoss || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Take Profit</span>
-                            <span class="detail-value">${utils.formatPrice(result.takeProfit || result.recommendations?.takeProfit || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(riskMetrics.takeProfit || result.takeProfit || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Prediction</span>
-                            <span class="detail-value">${utils.formatPrice(result.prediction || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(result.predictions?.combined?.nextPrice || result.prediction || 0)}</span>
                         </div>
                     </div>
                 </div>
@@ -1038,7 +1044,7 @@ const ui = {
                 <div class="detail-card">
                     <h3><i class="fas fa-calculator"></i> Technical Indicators</h3>
                     <div class="detail-grid">
-                        ${Object.entries(result.technical?.indicators || {}).map(([key, value]) => {
+                        ${Object.entries(result.technicalAnalysis?.summary?.indicators || {}).map(([key, value]) => {
                             if (key === 'stochastic' || key === 'bollingerBands') {
                                 return Object.entries(value).map(([subKey, subValue]) => `
                                     <div class="detail-item">
@@ -1071,23 +1077,23 @@ const ui = {
                     <div class="detail-grid">
                         <div class="detail-item">
                             <span class="detail-label">Candle Bullish</span>
-                            <span class="detail-value">${result.patterns?.candle?.bullish || 0}</span>
+                            <span class="detail-value">${result.patternAnalysis?.statistics?.candle?.bullish || 0}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Candle Bearish</span>
-                            <span class="detail-value">${result.patterns?.candle?.bearish || 0}</span>
+                            <span class="detail-value">${result.patternAnalysis?.statistics?.candle?.bearish || 0}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Candle Neutral</span>
-                            <span class="detail-value">${result.patterns?.candle?.neutral || 0}</span>
+                            <span class="detail-value">${result.patternAnalysis?.statistics?.candle?.neutral || 0}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Chart Bullish</span>
-                            <span class="detail-value">${result.patterns?.chart?.bullish || 0}</span>
+                            <span class="detail-value">${result.patternAnalysis?.statistics?.chart?.bullish || 0}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Chart Bearish</span>
-                            <span class="detail-value">${result.patterns?.chart?.bearish || 0}</span>
+                            <span class="detail-value">${result.patternAnalysis?.statistics?.chart?.bearish || 0}</span>
                         </div>
                     </div>
                 </div>
@@ -1097,7 +1103,12 @@ const ui = {
             <div class="detail-section">
                 <h3><i class="fas fa-lightbulb"></i> User-Friendly Interpretations</h3>
                 <div class="interpretations-grid">
-                    ${Object.entries(result.interpretations || {}).map(([key, value]) => {
+                    ${Object.entries({
+                        overall: result.recommendations?.overall?.summary || '',
+                        technical: result.technicalAnalysis?.summary?.interpretations || {},
+                        patterns: result.patternAnalysis?.interpretation || '',
+                        predictions: result.predictions?.combined?.interpretation || ''
+                    }).map(([key, value]) => {
                         if (typeof value === 'object') {
                             return Object.entries(value).map(([subKey, subValue]) => `
                                 <div class="interpretation-card">
