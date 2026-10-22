@@ -57,7 +57,7 @@ const CONFIG = {
         { step: 0, label: 'Validating stocks', icon: 'fa-check' },
         { step: 1, label: 'Fetching historical data', icon: 'fa-download' },
         { step: 2, label: 'Calculating indicators', icon: 'fa-calculator' },
-        { step: 3, label: 'Detecting patterns', icon: 'fa-chart-candlestick' },
+        { step: 3, label: 'Detecting patterns', icon: 'fa-chart-line' },
         { step: 4, label: 'Running predictions', icon: 'fa-brain' },
         { step: 5, label: 'Generating recommendations', icon: 'fa-chart-line' }
     ]
@@ -77,65 +77,71 @@ const state = {
         showPatterns: true,
         showPredictions: true,
         showInterpretations: true
-    },
-    charts: {}
+    }
 };
 
 // ===================================================================
 // DOM Elements
 // ===================================================================
+// Safe element getter - returns null if not found
+const getEl = (id) => document.getElementById(id) || null;
+
+// Safe addEventListener - checks if element exists
+const on = (el, event, handler) => el && el.addEventListener && el.addEventListener(event, handler);
+
+
 
 const elements = {
     // Stock Selection
-    stockSearch: document.getElementById('stockSearch'),
-    suggestionsList: document.getElementById('suggestionsList'),
-    selectedStocksList: document.getElementById('selectedStocksList'),
+    stockSearch: getEl('stockSearch'),
+    suggestionsList: getEl('suggestionsList'),
+    selectedStocksList: getEl('selectedStocksList'),
     
     // Period Selection
-    periodButtons: document.querySelectorAll('.period-btn'),
+    timePeriod: getEl('timePeriod'),
     
     // Analysis
-    analyzeBtn: document.getElementById('analyzeBtn'),
-    progressContainer: document.getElementById('progressContainer'),
-    progressBar: document.getElementById('progressBar'),
-    progressFill: document.getElementById('progressFill'),
-    progressText: document.getElementById('progressText'),
-    progressSteps: document.getElementById('progressSteps'),
-    cancelAnalysis: document.getElementById('cancelAnalysis'),
+    analyzeBtn: getEl('startAnalysisBtn'),
+    progressContainer: getEl('progressContainer'),
+    progressBar: getEl('progressBar'),
+    progressFill: getEl('progressFill'),
+    progressText: getEl('progressText'),
+    progressSteps: getEl('progressSteps'),
+    cancelAnalysis: getEl('startAnalysisBtn'),
     
     // Results
-    resultsContainer: document.getElementById('resultsContainer'),
-    summaryCards: document.getElementById('summaryCards'),
-    stockResults: document.getElementById('stockResults'),
+    resultsContainer: getEl('resultsContainer'),
+    summaryCards: getEl('summaryCards'),
+    stockResults: getEl('stockResults'),
     
     // Quick Stats
-    bullishCount: document.getElementById('bullishCount'),
-    bearishCount: document.getElementById('bearishCount'),
-    neutralCount: document.getElementById('neutralCount'),
-    avgConfidence: document.getElementById('avgConfidence'),
+    bullishCount: getEl('bullishCount'),
+    bearishCount: getEl('bearishCount'),
+    neutralCount: getEl('neutralCount'),
+    avgConfidence: getEl('avgConfidence'),
     
     // Activity
-    activityList: document.getElementById('activityList'),
+    activityList: getEl('logContainer'),
     
     // Modals
-    settingsModal: document.getElementById('settingsModal'),
-    stockDetailModal: document.getElementById('stockDetailModal'),
-    detailSymbol: document.getElementById('detailSymbol'),
-    stockDetailBody: document.getElementById('stockDetailBody'),
+    settingsModal: getEl('settingsModal'),
+    stockDetailModal: getEl('stockDetailModal'),
+    detailSymbol: getEl('detailSymbol'),
+    stockDetailBody: getEl('stockDetailBody'),
     
     // Settings
-    showIndicators: document.getElementById('showIndicators'),
-    showPatterns: document.getElementById('showPatterns'),
-    showPredictions: document.getElementById('showPredictions'),
-    showInterpretations: document.getElementById('showInterpretations'),
-    saveSettings: document.getElementById('saveSettings'),
+    showIndicators: getEl('showIndicators'),
+    showPatterns: getEl('showPatterns'),
+    showPredictions: getEl('showPredictions'),
+    showInterpretations: getEl('showInterpretations'),
+    saveSettings: getEl('saveSettings'),
     
     // Theme
-    themeToggle: document.getElementById('themeToggle'),
+    themeToggle: getEl('themeToggle'),
     
     // Export
-    exportJson: document.getElementById('exportJson'),
-    exportPdf: document.getElementById('exportPdf')
+    exportJson: getEl('exportJson'),
+    exportPdf: getEl('exportPdf')
 };
 
 // ===================================================================
@@ -195,20 +201,12 @@ const utils = {
     },
     
     // Format date
-    formatDate: (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    },
-    
-    // Escape HTML
-    escapeHtml: (text) => {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    formatDate: (date) => {
+        if (!date) return 'N/A';
+        if (typeof date === 'string') {
+            return new Date(date).toLocaleDateString();
+        }
+        return date.toLocaleDateString();
     }
 };
 
@@ -217,297 +215,58 @@ const utils = {
 // ===================================================================
 
 const api = {
-    // Fetch analysis for symbols
-    async analyze(symbols, options = {}) {
+    // Analyze stocks
+    analyze: async (symbols, options = {}) => {
         try {
-            // Validate symbols
-            const symbolList = Array.isArray(symbols) ? symbols : [symbols];
-            const validSymbols = symbolList.filter(s => s && s.trim() !== '');
-            
-            if (validSymbols.length === 0) {
-                throw new Error('No valid symbols provided');
-            }
-            
             const response = await fetch(`${CONFIG.API_BASE_URL}/analyze`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    symbols: validSymbols,
-                    ...options
+                    symbols: symbols,
+                    options: options
                 })
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || 'Analysis failed');
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Analysis failed');
             }
             
             const data = await response.json();
-            // Extract results array from response
-            return data.results || data;
+            
+            // Handle both array and object responses
+            if (Array.isArray(data.results)) {
+                return data.results;
+            } else if (data.results && typeof data.results === 'object') {
+                return Object.values(data.results);
+            } else if (Array.isArray(data)) {
+                return data;
+            } else {
+                return [data];
+            }
         } catch (error) {
             console.error('API Error:', error);
-            throw error;
+            throw new Error(`Failed to analyze: ${error.message}`);
         }
     },
     
-    // Get historical data
-    async getHistorical(symbol, options = {}) {
+    // Get historical data for a single stock
+    getHistorical: async (symbol, period = '7d', interval = '1d') => {
         try {
-            const params = new URLSearchParams(options);
-            const response = await fetch(`${CONFIG.API_BASE_URL}/historical/${symbol}?${params}`);
+            const response = await fetch(`${CONFIG.API_BASE_URL}/historical/${symbol}?period=${period}&interval=${interval}`);
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || 'Failed to fetch historical data');
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Failed to fetch data');
             }
             
             const data = await response.json();
-            // Extract data array from response
-            return data.data || data;
+            return data;
         } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    },
-    
-    // Get indicators
-    async getIndicators(symbol, options = {}) {
-        try {
-            const params = new URLSearchParams(options);
-            const response = await fetch(`${CONFIG.API_BASE_URL}/indicators/${symbol}?${params}`);
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || 'Failed to fetch indicators');
-            }
-            
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-};
-
-// ===================================================================
-// Chart Functions
-// ===================================================================
-
-// Note: Candlestick controllers are registered via chartjs-chart-financial plugin
-// which auto-registers with Chart.js
-
-const charts = {
-    // Chart colors
-    colors: {
-        primary: '#1652f0',
-        success: '#10b981',
-        danger: '#ef4444',
-        warning: '#f59e0b',
-        info: '#3b82f6',
-        bullish: '#10b981',
-        bearish: '#ef4444',
-        neutral: '#6b7280',
-        grid: '#2d3748',
-        text: '#a3a3a3'
-    },
-    
-    // Create candlestick chart
-    createCandlestickChart: (ctx, data) => {
-        const dates = data.map(d => d.date);
-        const open = data.map(d => d.open);
-        const high = data.map(d => d.high);
-        const low = data.map(d => d.low);
-        const close = data.map(d => d.close);
-        
-<<<<<<< HEAD
-<<<<<<< HEAD
-        // Ensure Chart.js 5.0.0 candlestick components are registered
-        if (typeof Chart !== 'undefined') {
-            Chart.register(
-                Chart.controllers.Candlestick,
-                Chart.elements.Candlestick,
-                Chart.scales.TimeScale,
-                Chart.scales.LinearScale
-            );
-=======
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
-        // Ensure candlestick controller is registered
-        try {
-            if (typeof Chart !== 'undefined') {
-                if (typeof ChartFinancial !== 'undefined' && ChartFinancial.CandlestickController) {
-                    Chart.register(ChartFinancial.CandlestickController, ChartFinancial.CandlestickElement);
-                } else if (Chart.controllers && Chart.controllers.Candlestick) {
-                    Chart.register(Chart.controllers.Candlestick, Chart.elements.Candlestick);
-                } else if (Chart.controllers && Chart.controllers.CandlestickController) {
-                    Chart.register(Chart.controllers.CandlestickController, Chart.elements.CandlestickElement);
-                }
-            }
-        } catch (e) {
-            console.warn('Chart registration in createCandlestickChart:', e.message);
-<<<<<<< HEAD
->>>>>>> 4b1512ec39b8d36daf88451ff48f1e05b216172f
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
-        }
-        
-        return new Chart(ctx, {
-            type: 'candlestick',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Price',
-                    data: dates.map((date, i) => ({
-                        t: date,
-                        o: open[i],
-                        h: high[i],
-                        l: low[i],
-                        c: close[i]
-                    })),
-                    color: {
-                        up: charts.colors.bullish,
-                        down: charts.colors.bearish,
-                        unchanged: charts.colors.neutral
-                    }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: '#1a1d21',
-                        titleColor: '#ffffff',
-                        bodyColor: '#a3a3a3',
-                        borderColor: '#2d3748',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: (context) => {
-                                const data = context.raw;
-                                return [
-                                    `Open: $${data.o.toFixed(2)}`,
-                                    `High: $${data.h.toFixed(2)}`,
-                                    `Low: $${data.l.toFixed(2)}`,
-                                    `Close: $${data.c.toFixed(2)}`
-                                ];
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'day',
-                            displayFormats: {
-                                day: 'MMM d'
-                            }
-                        },
-                        grid: {
-                            color: charts.colors.grid
-                        },
-                        ticks: {
-                            color: charts.colors.text
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: charts.colors.grid
-                        },
-                        ticks: {
-                            color: charts.colors.text,
-                            callback: (value) => '$' + value.toFixed(2)
-                        }
-                    }
-                }
-            }
-        });
-    },
-    
-    // Create line chart for indicators
-    createLineChart: (ctx, labels, datasets, title = '') => {
-        return new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: datasets.map(ds => ({
-                    label: ds.label,
-                    data: ds.data,
-                    borderColor: ds.color || charts.colors.primary,
-                    backgroundColor: ds.color ? ds.color + '33' : charts.colors.primary + '33',
-                    borderWidth: 2,
-                    fill: ds.fill || false,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                }))
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            color: charts.colors.text,
-                            padding: 15,
-                            usePointStyle: true,
-                            pointStyle: 'circle'
-                        }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: '#1a1d21',
-                        titleColor: '#ffffff',
-                        bodyColor: '#a3a3a3',
-                        borderColor: '#2d3748',
-                        borderWidth: 1
-                    },
-                    title: {
-                        display: title ? true : false,
-                        text: title,
-                        color: charts.colors.text,
-                        font: {
-                            size: 14
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: charts.colors.grid
-                        },
-                        ticks: {
-                            color: charts.colors.text
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: charts.colors.grid
-                        },
-                        ticks: {
-                            color: charts.colors.text
-                        }
-                    }
-                }
-            }
-        });
-    },
-    
-    // Destroy chart
-    destroy: (chart) => {
-        if (chart) {
-            chart.destroy();
+            console.error(`Error fetching historical data for ${symbol}:`, error);
+            throw new Error(`Failed to fetch data for ${symbol}: ${error.message}`);
         }
     }
 };
@@ -636,6 +395,9 @@ const ui = {
         
         // Initial render
         stockSelection.render();
+        
+        // Render progress steps
+        ui.renderProgressSteps();
     },
     
     // Initialize theme
@@ -646,7 +408,7 @@ const ui = {
         elements.themeToggle.innerHTML = savedTheme === 'dark' ? 
             '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
         
-        elements.themeToggle.addEventListener('click', () => {
+        on(elements.themeToggle, 'click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
@@ -667,11 +429,11 @@ const ui = {
             ui.renderSuggestions(suggestions);
         }, 300);
         
-        elements.stockSearch.addEventListener('input', (e) => {
+        on(elements.stockSearch, 'input', (e) => {
             debouncedSearch(e.target.value);
         });
         
-        elements.stockSearch.addEventListener('focus', () => {
+        on(elements.stockSearch, 'focus', () => {
             const query = elements.stockSearch.value;
             if (query.length > 0) {
                 const suggestions = stockSelection.search(query);
@@ -679,13 +441,13 @@ const ui = {
             }
         });
         
-        elements.stockSearch.addEventListener('blur', () => {
+        on(elements.stockSearch, 'blur', () => {
             setTimeout(() => {
                 ui.hideSuggestions();
             }, 200);
         });
         
-        elements.stockSearch.addEventListener('keydown', (e) => {
+        on(elements.stockSearch, 'keydown', (e) => {
             if (e.key === 'Enter') {
                 const query = elements.stockSearch.value.trim();
                 if (query) {
@@ -729,30 +491,20 @@ const ui = {
     
     // Initialize period selection
     initPeriodSelection: () => {
-        elements.periodButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all
-                elements.periodButtons.forEach(b => b.classList.remove('active'));
-                
-                // Add active class to clicked
-                btn.classList.add('active');
-                
-                // Update state
-                state.selectedPeriod = btn.dataset.period;
-                
-                ui.addActivity(`Selected period: ${btn.textContent}`);
-            });
+        on(elements.timePeriod, 'change', (e) => {
+            state.selectedPeriod = e.target.value;
+            ui.addActivity(`Selected period: ${e.target.options[e.target.selectedIndex].text}`);
         });
     },
     
     // Initialize analysis
     initAnalysis: () => {
-        elements.analyzeBtn.addEventListener('click', () => {
-            ui.startAnalysis();
-        });
-        
-        elements.cancelAnalysis.addEventListener('click', () => {
-            ui.cancelAnalysis();
+        on(elements.analyzeBtn, 'click', () => {
+            if (state.analysisInProgress) {
+                ui.cancelAnalysis();
+            } else {
+                ui.startAnalysis();
+            }
         });
     },
     
@@ -765,6 +517,18 @@ const ui = {
             elements.analyzeBtn.disabled = false;
             elements.analyzeBtn.innerHTML = `<i class="fas fa-play"></i> Run Analysis (${state.selectedStocks.length})`;
         }
+    },
+    
+    // Render progress steps
+    renderProgressSteps: () => {
+        elements.progressSteps.innerHTML = CONFIG.ANALYSIS_STEPS.map((step, index) => `
+            <div class="step" data-index="${index}">
+                <div class="step-icon">
+                    <i class="fas ${step.icon}"></i>
+                </div>
+                <div class="step-label">${step.label}</div>
+            </div>
+        `).join('');
     },
     
     // Start analysis
@@ -1029,10 +793,10 @@ const ui = {
             const signalClass = utils.getSignalClass(signal);
             const symbol = result.symbol || 'N/A';
             const price = result.currentPrice || 0;
-            const buyTarget = result.buyTarget || 0;
-            const sellTarget = result.sellTarget || 0;
-            const stopLoss = result.stopLoss || 0;
-            const takeProfit = result.takeProfit || 0;
+            const buyTarget = result.buyTarget || result.recommendations?.buyTarget || 0;
+            const sellTarget = result.sellTarget || result.recommendations?.sellTarget || 0;
+            const stopLoss = result.stopLoss || result.recommendations?.stopLoss || 0;
+            const takeProfit = result.takeProfit || result.recommendations?.takeProfit || 0;
             const confidence = result.confidence || 0;
             
             return `
@@ -1134,14 +898,6 @@ const ui = {
                         </div>
                         ` : ''}
                         
-                        <!-- Charts Section -->
-                        <div class="chart-container">
-                            <h4><i class="fas fa-chart-line"></i> Price History</h4>
-                            <div class="chart-wrapper">
-                                <canvas id="chart-${index}"></canvas>
-                            </div>
-                        </div>
-                        
                         <button class="btn btn-secondary" onclick="ui.showStockDetail(${index})" style="margin-top: 1rem;">
                             <i class="fas fa-expand"></i> View Full Details
                         </button>
@@ -1150,10 +906,8 @@ const ui = {
             `;
         }).join('');
         
-        // Load charts
-        setTimeout(() => {
-            ui.loadCharts();
-        }, 100);
+        // Show quick stats
+        elements.quickStats.style.display = 'flex';
     },
     
     // Render indicators
@@ -1222,45 +976,7 @@ const ui = {
         }).join('');
     },
     
-    // Load charts
-    loadCharts: async () => {
-        for (let i = 0; i < state.analysisResults.length; i++) {
-            const result = state.analysisResults[i];
-            const canvas = document.getElementById(`chart-${i}`);
-            
-            if (!canvas) continue;
-            
-            try {
-                // Fetch historical data for this stock
-                const periodConfig = CONFIG.PERIOD_MAP[state.selectedPeriod] || 
-                    CONFIG.PERIOD_MAP['7d'];
-                
-                const historicalData = await api.getHistorical(result.symbol, {
-                    period: periodConfig.period,
-                    interval: periodConfig.interval
-                });
-                
-                if (historicalData && historicalData.length > 0) {
-                    // Prepare data for chart
-                    const chartData = historicalData.map(d => ({
-                        date: new Date(d.timestamp * 1000),
-                        open: d.open,
-                        high: d.high,
-                        low: d.low,
-                        close: d.close
-                    }));
-                    
-                    // Create chart
-                    charts[`chart-${i}`] = charts.createCandlestickChart(
-                        canvas.getContext('2d'),
-                        chartData
-                    );
-                }
-            } catch (error) {
-                console.error('Error loading chart:', error);
-            }
-        }
-    },
+    
     
     // Toggle stock result
     toggleStockResult: (index) => {
@@ -1315,19 +1031,19 @@ const ui = {
                     <div class="detail-grid">
                         <div class="detail-item">
                             <span class="detail-label">Buy Target</span>
-                            <span class="detail-value">${utils.formatPrice(result.buyTarget || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(result.buyTarget || result.recommendations?.buyTarget || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Sell Target</span>
-                            <span class="detail-value">${utils.formatPrice(result.sellTarget || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(result.sellTarget || result.recommendations?.sellTarget || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Stop Loss</span>
-                            <span class="detail-value">${utils.formatPrice(result.stopLoss || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(result.stopLoss || result.recommendations?.stopLoss || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Take Profit</span>
-                            <span class="detail-value">${utils.formatPrice(result.takeProfit || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(result.takeProfit || result.recommendations?.takeProfit || 0)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Prediction</span>
@@ -1431,23 +1147,29 @@ const ui = {
     // Initialize modals
     initModals: () => {
         // Close modal on click outside
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('show');
-                }
+        const modals = document.querySelectorAll('.modal');
+        if (modals) {
+            modals.forEach(modal => {
+                on(modal, 'click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
             });
-        });
+        }
         
         // Close modal buttons
-        document.querySelectorAll('.close-modal').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.closest('.modal').classList.remove('show');
+        const closeButtons = document.querySelectorAll('.close-modal');
+        if (closeButtons) {
+            closeButtons.forEach(btn => {
+                on(btn, 'click', () => {
+                    btn.closest('.modal').classList.remove('show');
+                });
             });
-        });
+        }
         
         // Close on escape key
-        document.addEventListener('keydown', (e) => {
+        on(document, 'keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal').forEach(modal => {
                     modal.classList.remove('show');
@@ -1475,7 +1197,7 @@ const ui = {
         elements.showInterpretations.checked = state.settings.showInterpretations;
         
         // Save settings
-        elements.saveSettings.addEventListener('click', () => {
+        on(elements.saveSettings, 'click', () => {
             state.settings = {
                 showIndicators: elements.showIndicators.checked,
                 showPatterns: elements.showPatterns.checked,
@@ -1500,7 +1222,7 @@ const ui = {
     
     // Initialize export
     initExport: () => {
-        elements.exportJson.addEventListener('click', () => {
+        on(elements.exportJson, 'click', () => {
             if (!state.analysisResults) {
                 ui.showNotification('No results to export', 'warning');
                 return;
@@ -1522,13 +1244,15 @@ const ui = {
             ui.showNotification('JSON exported successfully', 'success');
         });
         
-        elements.exportPdf.addEventListener('click', () => {
+        on(elements.exportPdf, 'click', () => {
             ui.showNotification('PDF export coming soon!', 'info');
         });
     },
     
     // Add activity item
     addActivity: (message) => {
+        if (!elements.activityList) return;
+        
         const item = document.createElement('div');
         item.className = 'activity-item fade-in';
         item.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span>`;

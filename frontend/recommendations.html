@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depthquote - Stock Analysis Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Depthquote</span>
+                </div>
+                <nav class="main-nav">
+                    <a href="index.html"><i class="fas fa-chart-line"></i> Analysis</a>
+                    <a href="recommendations.html" class="active"><i class="fas fa-bullseye"></i> Recommendations</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-icon" id="themeToggle" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="btn-icon" id="settingsBtn" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="recommendations-container">
+                <div class="recommendations-header">
+                    <h1>?? Stock Recommendations</h1>
+                    <p>Get personalized stock suggestions based on your trading capital and risk tolerance</p>
+                </div>
+
+        <!-- Input Form -->
+        <div class="input-form">
+            <h2>Your Trading Profile</h2>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="basic">Basic</button>
+                <button class="tab" data-tab="advanced">Advanced</button>
+            </div>
+
+            <!-- Basic Tab -->
+            <div class="tab-content active" id="basic-tab">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="capital">Your Trading Capital ($)</label>
+                        <input type="number" id="capital" placeholder="e.g., 200" min="100" step="10" value="1000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="riskTolerance">Risk Tolerance</label>
+                        <select id="riskTolerance">
+                            <option value="conservative">Conservative</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="aggressive">Aggressive</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="goal">Investment Goal</label>
+                        <select id="goal">
+                            <option value="growth" selected>Growth</option>
+                            <option value="income">Income</option>
+                            <option value="balanced">Balanced</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="stockCount">Number of Recommendations</label>
+                        <select id="stockCount">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="7">7</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeHorizon">Time Horizon</label>
+                        <select id="timeHorizon">
+                            <option value="short">Short-term (0-3 months)</option>
+                            <option value="medium" selected>Medium-term (3-12 months)</option>
+                            <option value="long">Long-term (1+ year)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="getRecommendations()">
+                    Get Recommendations
+                </button>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div class="tab-content" id="advanced-tab">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="capital-advanced">Your Trading Capital ($)</label>
+                        <input type="number" id="capital-advanced" placeholder="e.g., 200" min="100" step="10" value="1000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="riskTolerance-advanced">Risk Tolerance</label>
+                        <select id="riskTolerance-advanced">
+                            <option value="conservative">Conservative</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="aggressive">Aggressive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Risk Level</label>
+                        <div class="slider-container">
+                            <input type="range" id="riskSlider" class="risk-slider" min="0" max="100" value="50">
+                        </div>
+                        <div class="slider-labels">
+                            <span>Conservative</span>
+                            <span>Moderate</span>
+                            <span>Aggressive</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Stock Category</label>
+                        <select id="category">
+                            <option value="">All Categories</option>
+                            <option value="high-growth">High Growth</option>
+                            <option value="blue-chip">Blue Chip</option>
+                            <option value="value">Value Stocks</option>
+                            <option value="dividend">Dividend Stocks</option>
+                            <option value="momentum">Momentum</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stockCount-advanced">Number of Recommendations</label>
+                        <select id="stockCount-advanced">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="7">7</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="getAdvancedRecommendations()">
+                    Get Advanced Recommendations
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p style="color: #a0a0a0; margin-top: 15px;">Analyzing stocks and generating recommendations...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2>Your Personalized Recommendations</h2>
+                <div class="results-meta" id="resultsMeta"></div>
+            </div>
+
+            <!-- Advice Section -->
+            <div class="advice-section" id="adviceSection">
+                <h2>💡 Personalized Advice</h2>
+                <ul class="advice-list" id="adviceList"></ul>
+            </div>
+
+            <!-- Portfolio Analysis -->
+            <div class="portfolio-analysis" id="portfolioAnalysis">
+                <h2>📊 Portfolio Analysis</h2>
+                <div class="analysis-grid" id="analysisGrid"></div>
+            </div>
+
+            <!-- Recommendations Grid -->
+            <div class="recommendations-grid" id="recommendationsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // Risk slider sync
+        const riskSlider = document.getElementById('riskSlider');
+        const riskSelect = document.getElementById('riskTolerance-advanced');
+        
+        riskSlider.addEventListener('input', () => {
+            const value = parseInt(riskSlider.value);
+            if (value < 33) {
+                riskSelect.value = 'conservative';
+            } else if (value < 67) {
+                riskSelect.value = 'moderate';
+            } else {
+                riskSelect.value = 'aggressive';
+            }
+        });
+
+        riskSelect.addEventListener('change', () => {
+            switch(riskSelect.value) {
+                case 'conservative':
+                    riskSlider.value = 20;
+                    break;
+                case 'moderate':
+                    riskSlider.value = 50;
+                    break;
+                case 'aggressive':
+                    riskSlider.value = 80;
+                    break;
+            }
+        });
+
+        // Main recommendation function
+        async function getRecommendations() {
+            const capital = document.getElementById('capital').value;
+            const riskTolerance = document.getElementById('riskTolerance').value;
+            const goal = document.getElementById('goal').value;
+            const stockCount = document.getElementById('stockCount').value;
+            const timeHorizon = document.getElementById('timeHorizon').value;
+
+            await fetchRecommendations({
+                capital: parseFloat(capital),
+                riskTolerance,
+                goal,
+                stockCount: parseInt(stockCount),
+                timeHorizon
+            });
+        }
+
+        // Advanced recommendations
+        async function getAdvancedRecommendations() {
+            const capital = document.getElementById('capital-advanced').value;
+            const riskTolerance = document.getElementById('riskTolerance-advanced').value;
+            const stockCount = document.getElementById('stockCount-advanced').value;
+            const category = document.getElementById('category').value;
+
+            if (category) {
+                // Use category-specific endpoint
+                await fetchRecommendations({
+                    endpoint: `/api/recommendations/category/${category}`,
+                    capital: parseFloat(capital),
+                    riskTolerance,
+                    stockCount: parseInt(stockCount)
+                });
+            } else {
+                await fetchRecommendations({
+                    capital: parseFloat(capital),
+                    riskTolerance,
+                    stockCount: parseInt(stockCount)
+                });
+            }
+        }
+
+        // Fetch recommendations from API
+        async function fetchRecommendations(params) {
+            const endpoint = params.endpoint || '/api/recommendations';
+            
+            // Show loading spinner
+            document.getElementById('loadingSpinner').classList.add('active');
+            document.getElementById('errorMessage').textContent = '';
+            document.getElementById('resultsSection').classList.remove('active');
+
+            try {
+                // Build query string
+                const queryParams = new URLSearchParams();
+                
+                if (endpoint === '/api/recommendations') {
+                    queryParams.append('capital', params.capital);
+                    if (params.riskTolerance) queryParams.append('riskTolerance', params.riskTolerance);
+                    if (params.goal) queryParams.append('goal', params.goal);
+                    if (params.stockCount) queryParams.append('stockCount', params.stockCount);
+                    if (params.timeHorizon) queryParams.append('timeHorizon', params.timeHorizon);
+                } else {
+                    // For category endpoint
+                    queryParams.append('capital', params.capital);
+                    if (params.riskTolerance) queryParams.append('riskTolerance', params.riskTolerance);
+                    if (params.stockCount) queryParams.append('stockCount', params.stockCount);
+                }
+
+                const url = endpoint + '?' + queryParams.toString();
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recommendations');
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error?.message || 'Unknown error');
+                }
+
+                // Display results
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('errorMessage').textContent = 
+                    'Error: ' + error.message + '. Please try again.';
+            } finally {
+                document.getElementById('loadingSpinner').classList.remove('active');
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const adviceList = document.getElementById('adviceList');
+            const analysisGrid = document.getElementById('analysisGrid');
+            const recommendationsGrid = document.getElementById('recommendationsGrid');
+            const resultsMeta = document.getElementById('resultsMeta');
+            const portfolioAnalysis = document.getElementById('portfolioAnalysis');
+
+            // Clear previous results
+            adviceList.innerHTML = '';
+            analysisGrid.innerHTML = '';
+            recommendationsGrid.innerHTML = '';
+            resultsMeta.innerHTML = '';
+
+            // Show results section
+            resultsSection.classList.add('active');
+
+            // Display meta info
+            if (data.capital) {
+                resultsMeta.innerHTML = `
+                    <span>Capital: $${data.capital.toLocaleString()}</span>
+                    <span>Risk Tolerance: ${data.riskTolerance || 'N/A'}</span>
+                    <span>Goal: ${data.goal || 'N/A'}</span>
+                    <span>Recommendations: ${data.recommendations?.length || 0}</span>
+                `;
+            }
+
+            // Display advice
+            if (data.advice) {
+                data.advice.forEach(advice => {
+                    const li = document.createElement('li');
+                    li.textContent = advice;
+                    adviceList.appendChild(li);
+                });
+            } else if (data.recommendations && data.recommendations.length > 0) {
+                // If no general advice, show first recommendation's advice
+                const firstRec = data.recommendations[0];
+                if (firstRec.smallAccountAdvice) {
+                    const li = document.createElement('li');
+                    li.textContent = firstRec.smallAccountAdvice;
+                    adviceList.appendChild(li);
+                }
+            }
+
+            // Display portfolio analysis
+            if (data.portfolioAnalysis) {
+                const pa = data.portfolioAnalysis;
+                
+                const items = [
+                    { label: 'Total Position Size', value: '$' + pa.totalPositionSize?.toFixed(2) },
+                    { label: 'Capital Utilization', value: (pa.capitalUtilization * 100)?.toFixed(1) + '%' },
+                    { label: 'Total Potential Profit', value: '$' + pa.totalPotentialProfit?.toFixed(2) },
+                    { label: 'Portfolio Risk/Reward', value: pa.portfolioRiskRewardRatio?.toFixed(2) + ':1' },
+                    { label: 'Expected Return', value: (pa.expectedPortfolioReturn * 100)?.toFixed(1) + '%' },
+                    { label: 'Risk Level', value: pa.riskLevel || 'N/A' }
+                ];
+
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'analysis-item';
+                    div.innerHTML = `
+                        <div class="analysis-label">${item.label}</div>
+                        <div class="analysis-value">${item.value}</div>
+                        ${item.label.includes('Utilization') ? '<div class="progress-bar"><div class="progress-fill" style="width: ' + (pa.capitalUtilization * 100) + '%"></div></div>' : ''}
+                    `;
+                    analysisGrid.appendChild(div);
+                });
+            }
+
+            // Display recommendations
+            if (data.recommendations && data.recommendations.length > 0) {
+                data.recommendations.forEach((rec, index) => {
+                    const card = createRecommendationCard(rec, index + 1);
+                    recommendationsGrid.appendChild(card);
+                });
+            }
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Create recommendation card
+        function createRecommendationCard(rec, rank) {
+            const card = document.createElement('div');
+            card.className = 'recommendation-card';
+
+            const sizing = rec.positionSizing || {};
+            const analysis = rec.analysis || {};
+            const recs = analysis.recommendations || {};
+            const profitAnalysis = recs.profitAnalysis || {};
+
+            // Determine signal color
+            const signal = recs.overall?.signal || 'neutral';
+            let signalClass = 'neutral';
+            let signalText = signal.toUpperCase();
+            
+            if (signal === 'bullish' || signal === 'strong buy' || signal === 'buy') {
+                signalClass = 'profit';
+            } else if (signal === 'bearish' || signal === 'sell' || signal === 'strong sell') {
+                signalClass = 'loss';
+            }
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="stock-info">
+                        <span class="rank">#${rank}</span>
+                        <span class="stock-symbol">${rec.symbol}</span>
+                        <span class="stock-price">$${(rec.price || 0).toFixed(2)}</span>
+                    </div>
+                    <span class="score-badge">Score: ${(rec.score * 100).toFixed(0)}</span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="detail-row">
+                        <span class="detail-label">Signal</span>
+                        <span class="detail-value ${signalClass}">${signalText}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Position Size</span>
+                        <span class="detail-value">$${sizing.positionSize?.toFixed(2) || 'N/A'} (${(sizing.positionSizePercent * 100)?.toFixed(0) || '0'}%)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Shares</span>
+                        <span class="detail-value">${sizing.shares?.toFixed(4) || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Entry Price</span>
+                        <span class="detail-value">$${sizing.entryPrice?.toFixed(2) || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Sell Target</span>
+                        <span class="detail-value">$${sizing.sellTarget?.toFixed(2) || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Stop Loss</span>
+                        <span class="detail-value">$${sizing.stopLoss?.toFixed(2) || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Potential Profit</span>
+                        <span class="detail-value profit">+$${sizing.potentialProfit?.toFixed(2) || '0'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Risk/Reward</span>
+                        <span class="detail-value">${sizing.riskRewardRatio?.toFixed(2) || '0'}:1</span>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="reason-text">${rec.recommendationReason || rec.smallAccountAdvice || 'No additional information'}</div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Auto-load with default values on page load
+        window.addEventListener('load', () => {
+            // Optionally auto-load recommendations with default values
+            // getRecommendations();
+        });
+    </script>
+</div>
+    </div>
+</body>
+</html>

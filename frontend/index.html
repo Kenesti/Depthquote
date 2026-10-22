@@ -7,108 +7,6 @@
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@5.0.0/dist/chart.umd.min.js"></script>
-    <script>
-        // Initialize Chart.js and register all required components
-        // This must happen BEFORE loading any plugins
-        if (typeof Chart !== 'undefined') {
-            // Register built-in components needed for candlestick charts
-            Chart.register(
-                Chart.controllers.Candlestick,
-                Chart.elements.Candlestick,
-                Chart.scales.TimeScale,
-                Chart.scales.LinearScale,
-                Chart.plugins.Tooltip,
-                Chart.plugins.Legend
-            );
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-=======
-    
-    <!-- Chart.js and plugins - MUST load in this order -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
-    <script src="https://unpkg.com/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-    
-    <script>
-        // Register financial chart components for candlestick charts
-        // Use window.onload to ensure ALL scripts are fully loaded
-        window.onload = function() {
-            function registerCandlestick() {
-                try {
-                    if (typeof Chart === 'undefined') {
-                        console.error('Chart.js not loaded');
-                        return;
-                    }
-                    
-                    // Approach 1: ChartFinancial namespace (UMD export from chartjs-chart-financial)
-                    if (typeof ChartFinancial !== 'undefined' && ChartFinancial.CandlestickController) {
-                        Chart.register(ChartFinancial.CandlestickController, ChartFinancial.CandlestickElement);
-                        console.log('Chart.js: Registered ChartFinancial candlestick controller');
-                        return;
-                    }
-                    
-                    // Approach 2: Direct Chart namespace
-                    if (Chart.controllers && Chart.controllers.Candlestick) {
-                        Chart.register(Chart.controllers.Candlestick, Chart.elements.Candlestick);
-                        console.log('Chart.js: Registered Chart.controllers.Candlestick');
-                        return;
-                    }
-                    
-                    // Approach 3: With Controller suffix
-                    if (Chart.controllers && Chart.controllers.CandlestickController) {
-                        Chart.register(Chart.controllers.CandlestickController, Chart.elements.CandlestickElement);
-                        console.log('Chart.js: Registered Chart.controllers.CandlestickController');
-                        return;
-                    }
-                    
-                    // Approach 4: Already registered
-                    if (Chart.types && Chart.types.candlestick) {
-                        console.log('Chart.js: Candlestick type already registered');
-                        return;
-                    }
-                    
-                    // Debug: Show what's available
-                    console.error('Chart.js: Candlestick controller NOT FOUND');
-                    console.error('ChartFinancial:', typeof ChartFinancial);
-                    console.error('Chart.controllers:', Chart.controllers ? Object.keys(Chart.controllers) : 'undefined');
-                    console.error('Chart.elements:', Chart.elements ? Object.keys(Chart.elements) : 'undefined');
-                } catch (e) {
-                    console.error('Chart.js registration error:', e);
-                }
-            }
-            
-            // Try registration at multiple intervals
-            registerCandlestick();
-            setTimeout(registerCandlestick, 200);
-            setTimeout(registerCandlestick, 500);
-        };
-    </script>
->>>>>>> 4b1512ec39b8d36daf88451ff48f1e05b216172f
-=======
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@5.0.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-    
-    <script>
-        if (typeof Chart !== 'undefined') {
-            Chart.register(
-                Chart.controllers.Candlestick,
-                Chart.elements.Candlestick,
-                Chart.scales.TimeScale,
-                Chart.scales.LinearScale,
-                Chart.plugins.Tooltip,
-                Chart.plugins.Legend
-            );
-        }
-    </script>
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
 </head>
 <body>
     <div class="app-container">
@@ -118,6 +16,10 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Depthquote</span>
                 </div>
+                <nav class="main-nav">
+                    <a href="index.html" class="active"><i class="fas fa-chart-line"></i> Analysis</a>
+                    <a href="recommendations.html"><i class="fas fa-bullseye"></i> Recommendations</a>
+                </nav>
                 <div class="header-actions">
                     <button class="btn-icon" id="themeToggle" title="Toggle Theme">
                         <i class="fas fa-moon"></i>
@@ -157,10 +59,6 @@
                 </div>
             </aside>
 
-<<<<<<< HEAD
-            <!-- Main Analysis Area -->
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
             <main class="main-panel">
                 <div class="analysis-header">
                     <h1><i class="fas fa-chart-line"></i> Stock Analysis</h1>
@@ -183,23 +81,13 @@
                             <i class="fas fa-play"></i> Start Analysis
                         </button>
                     </div>
-<<<<<<< HEAD
-                </div>
-
-                <!-- Progress Bar -->
-                <div class="progress-container" id="progressContainer" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-steps" id="progressSteps"></div>
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
                 </div>
 
                 <div class="progress-container" id="progressContainer" style="display: none;">
-                    <div class="progress-bar">
+                    <div class="progress-bar" id="progressBar">
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
+                    <div class="progress-text" id="progressText"></div>
                     <div class="progress-steps" id="progressSteps"></div>
                 </div>
 
@@ -210,30 +98,28 @@
                             <i class="fas fa-download"></i> Export JSON
                         </button>
                     </div>
-                    
-<<<<<<< HEAD
-                    <div class="results-grid" id="resultsGrid">
-                        <!-- Results will be populated here -->
-                    </div>
-                </div>
-
-                <!-- Chart Container -->
-=======
+                    <div class="summary-cards" id="summaryCards"></div>
+                    <div class="stock-results" id="stockResults"></div>
                     <div class="results-grid" id="resultsGrid"></div>
                 </div>
 
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
-                <div class="chart-container" id="chartContainer">
-                    <div class="chart-wrapper">
-                        <canvas id="candlestickChart"></canvas>
+                <div class="quick-stats" id="quickStats" style="display: none;">
+                    <div class="stat-item">
+                        <span>Bullish: <strong id="bullishCount">0</strong></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Bearish: <strong id="bearishCount">0</strong></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Neutral: <strong id="neutralCount">0</strong></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Avg Confidence: <strong id="avgConfidence">0%</strong></span>
                     </div>
                 </div>
+
             </main>
 
-<<<<<<< HEAD
-            <!-- Right Sidebar - Analysis Summary -->
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
             <aside class="sidebar right-sidebar">
                 <div class="sidebar-header">
                     <h2><i class="fas fa-file-alt"></i> Analysis Summary</h2>
@@ -264,15 +150,11 @@
             </aside>
         </div>
 
-<<<<<<< HEAD
-        <!-- Activity Log Modal -->
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
         <div class="modal" id="activityLogModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2><i class="fas fa-list"></i> Activity Log</h2>
-                    <button class="btn-close" id="closeLogModal">&times;</button>
+                    <button class="btn-close close-modal" id="closeLogModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="log-container" id="logContainer"></div>
@@ -280,15 +162,21 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-        <!-- Settings Modal -->
-=======
->>>>>>> dcbca3676a66de3eaa2b6cbbb71fe1a899c83546
+        <div class="modal" id="stockDetailModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-chart-line"></i> <span id="detailSymbol">Stock Details</span></h2>
+                    <button class="btn-close close-modal" id="closeDetailModal">&times;</button>
+                </div>
+                <div class="modal-body" id="stockDetailBody"></div>
+            </div>
+        </div>
+
         <div class="modal" id="settingsModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2><i class="fas fa-cog"></i> Settings</h2>
-                    <button class="btn-close" id="closeSettingsModal">&times;</button>
+                    <button class="btn-close close-modal" id="closeSettingsModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="settings-section">
@@ -301,14 +189,26 @@
                         </div>
                         <div class="setting-item">
                             <label>
-                                <input type="checkbox" id="showInterpretations" checked>
-                                <span>Show Interpretations</span>
+                                <input type="checkbox" id="showIndicators" checked>
+                                <span>Show Indicators</span>
                             </label>
                         </div>
                         <div class="setting-item">
                             <label>
-                                <input type="checkbox" id="showCharts" checked>
-                                <span>Show Charts</span>
+                                <input type="checkbox" id="showPatterns" checked>
+                                <span>Show Patterns</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="showPredictions" checked>
+                                <span>Show Predictions</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="showInterpretations" checked>
+                                <span>Show Interpretations</span>
                             </label>
                         </div>
                     </div>
@@ -324,10 +224,39 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <div class="settings-section">
+                        <h3><i class="fas fa-save"></i> Export Options</h3>
+                        <div class="export-options">
+                            <button class="btn btn-secondary" id="exportJson">
+                                <i class="fas fa-file-code"></i> Export JSON
+                            </button>
+                            <button class="btn btn-secondary" id="exportPdf">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="saveSettings">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
                 </div>
             </div>
         </div>
 
+        <div class="modal" id="exportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-download"></i> Export Data</h2>
+                    <button class="btn-close close-modal" id="closeExportModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-content" id="exportContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load app.js which will initialize everything -->
         <script src="js/app.js"></script>
     </div>
 </body>
