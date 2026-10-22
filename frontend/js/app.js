@@ -669,8 +669,10 @@ const ui = {
         let totalConfidence = 0;
         
         state.analysisResults.forEach(result => {
-            const signal = (result.overallSignal || '').toLowerCase();
-            const confidence = result.confidence || 0;
+            const recommendations = result.recommendations || {};
+            const overall = recommendations.overall || {};
+            const signal = (overall.signal || result.overallSignal || '').toLowerCase();
+            const confidence = overall.confidence || result.confidence || 0;
             
             if (signal.includes('bullish')) bullish++;
             else if (signal.includes('bearish')) bearish++;
@@ -691,15 +693,34 @@ const ui = {
     // Display summary cards
     displaySummaryCards: () => {
         const totalStocks = state.analysisResults.length;
-        const avgPrice = state.analysisResults.reduce((sum, r) => sum + (r.currentPrice || 0), 0) / totalStocks;
-        const avgPrediction = state.analysisResults.reduce((sum, r) => sum + (r.prediction || 0), 0) / totalStocks;
         
-        const bullish = state.analysisResults.filter(r => 
-            (r.overallSignal || '').toLowerCase().includes('bullish')
-        ).length;
-        const bearish = state.analysisResults.filter(r => 
-            (r.overallSignal || '').toLowerCase().includes('bearish')
-        ).length;
+        // Calculate average price from currentData or currentPrice
+        const avgPrice = state.analysisResults.reduce((sum, r) => {
+            const currentData = r.currentData || {};
+            const price = currentData.close || currentData.price || r.currentPrice || 0;
+            return sum + price;
+        }, 0) / totalStocks;
+        
+        // Calculate average prediction from recommendations
+        const avgPrediction = state.analysisResults.reduce((sum, r) => {
+            const recommendations = r.recommendations || {};
+            const priceTargets = recommendations.priceTargets || {};
+            const prediction = priceTargets.sell || r.prediction || 0;
+            return sum + prediction;
+        }, 0) / totalStocks;
+        
+        const bullish = state.analysisResults.filter(r => {
+            const recommendations = r.recommendations || {};
+            const overall = recommendations.overall || {};
+            const signal = (overall.signal || r.overallSignal || '').toLowerCase();
+            return signal.includes('bullish');
+        }).length;
+        const bearish = state.analysisResults.filter(r => {
+            const recommendations = r.recommendations || {};
+            const overall = recommendations.overall || {};
+            const signal = (overall.signal || r.overallSignal || '').toLowerCase();
+            return signal.includes('bearish');
+        }).length;
         
         elements.summaryCards.innerHTML = `
             <div class="summary-card">
@@ -744,15 +765,21 @@ const ui = {
     // Display individual stock results
     displayStockResults: () => {
         elements.stockResults.innerHTML = state.analysisResults.map((result, index) => {
-            const signal = result.overallSignal || 'neutral';
+            const recommendations = result.recommendations || {};
+            const overall = recommendations.overall || {};
+            const priceTargets = recommendations.priceTargets || {};
+            const riskMetrics = recommendations.riskMetrics || {};
+            
+            const signal = overall.signal || result.overallSignal || 'neutral';
             const signalClass = utils.getSignalClass(signal);
             const symbol = result.symbol || 'N/A';
-            const price = result.currentPrice || 0;
-            const buyTarget = result.buyTarget || result.recommendations?.buyTarget || 0;
-            const sellTarget = result.sellTarget || result.recommendations?.sellTarget || 0;
-            const stopLoss = result.stopLoss || result.recommendations?.stopLoss || 0;
-            const takeProfit = result.takeProfit || result.recommendations?.takeProfit || 0;
-            const confidence = result.confidence || 0;
+            const currentData = result.currentData || {};
+            const price = currentData.close || currentData.price || result.currentPrice || 0;
+            const buyTarget = priceTargets.buy || result.buyTarget || 0;
+            const sellTarget = priceTargets.sell || result.sellTarget || 0;
+            const stopLoss = riskMetrics.stopLoss || result.stopLoss || 0;
+            const takeProfit = riskMetrics.takeProfit || result.takeProfit || 0;
+            const confidence = overall.confidence || result.confidence || 0;
             
             return `
                 <div class="stock-result-card slide-up" style="animation-delay: ${index * 0.1}s">
