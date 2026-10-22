@@ -8,8 +8,11 @@
     "start:frontend": "node index.js --serve-frontend",
     "dev": "nodemon index.js",
     "dev:frontend": "nodemon index.js --serve-frontend",
-    "test": "jest",
+    "test": "node tests/backtestStrategies.js && node tests/smallTraderTest.js",
+    "test:unit": "jest",
     "test:watch": "jest --watch",
+    "test:backtest": "node tests/backtestStrategies.js",
+    "test:small-trader": "node tests/smallTraderTest.js",
     "lint": "eslint .",
     "prettier": "prettier --write ."
   },
