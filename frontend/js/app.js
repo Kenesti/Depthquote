@@ -91,59 +91,9 @@ const on = (el, event, handler) => el && el.addEventListener && el.addEventListe
 
 
 
-const elements = {
-    // Stock Selection
-    stockSearch: getEl('stockSearch'),
-    suggestionsList: getEl('suggestionsList'),
-    selectedStocksList: getEl('selectedStocksList'),
-    
-    // Period Selection
-    timePeriod: getEl('timePeriod'),
-    
-    // Analysis
-    analyzeBtn: getEl('startAnalysisBtn'),
-    progressContainer: getEl('progressContainer'),
-    progressBar: getEl('progressBar'),
-    progressFill: getEl('progressFill'),
-    progressText: getEl('progressText'),
-    progressSteps: getEl('progressSteps'),
-    cancelAnalysis: getEl('startAnalysisBtn'),
-    
-    // Results
-    resultsContainer: getEl('resultsContainer'),
-    summaryCards: getEl('summaryCards'),
-    stockResults: getEl('stockResults'),
-    
-    // Quick Stats
-    quickStats: getEl('quickStats'),
-    bullishCount: getEl('bullishCount'),
-    bearishCount: getEl('bearishCount'),
-    neutralCount: getEl('neutralCount'),
-    avgConfidence: getEl('avgConfidence'),
-    
-    // Activity
-    activityList: getEl('logContainer'),
-    
-    // Modals
-    settingsModal: getEl('settingsModal'),
-    stockDetailModal: getEl('stockDetailModal'),
-    detailSymbol: getEl('detailSymbol'),
-    stockDetailBody: getEl('stockDetailBody'),
-    
-    // Settings
-    showIndicators: getEl('showIndicators'),
-    showPatterns: getEl('showPatterns'),
-    showPredictions: getEl('showPredictions'),
-    showInterpretations: getEl('showInterpretations'),
-    saveSettings: getEl('saveSettings'),
-    
-    // Theme
-    themeToggle: getEl('themeToggle'),
-    
-    // Export
-    exportJson: getEl('exportJson'),
-    exportPdf: getEl('exportPdf')
-};
+let elements = null;
+
+
 
 // ===================================================================
 // Utility Functions
@@ -687,6 +637,10 @@ const ui = {
     
     // Display results
     displayResults: () => {
+        if (!elements.summaryCards || !elements.stockResults) {
+            console.error('Elements not initialized');
+            return;
+        }
         if (!state.analysisResults || state.analysisResults.length === 0) {
             elements.summaryCards.innerHTML = `
                 <div class="empty-results">
@@ -1319,7 +1273,66 @@ const ui = {
 // Initialize Application
 // ===================================================================
 
+
+// Initialize elements after DOM is ready
+const initElements = () => {
+    elements = {
+    // Stock Selection
+    stockSearch: getEl('stockSearch'),
+    suggestionsList: getEl('suggestionsList'),
+    selectedStocksList: getEl('selectedStocksList'),
+    
+    // Period Selection
+    timePeriod: getEl('timePeriod'),
+    
+    // Analysis
+    analyzeBtn: getEl('startAnalysisBtn'),
+    progressContainer: getEl('progressContainer'),
+    progressBar: getEl('progressBar'),
+    progressFill: getEl('progressFill'),
+    progressText: getEl('progressText'),
+    progressSteps: getEl('progressSteps'),
+    cancelAnalysis: getEl('startAnalysisBtn'),
+    
+    // Results
+    resultsContainer: getEl('resultsContainer'),
+    summaryCards: getEl('summaryCards'),
+    stockResults: getEl('stockResults'),
+    
+    // Quick Stats
+    quickStats: getEl('quickStats'),
+    bullishCount: getEl('bullishCount'),
+    bearishCount: getEl('bearishCount'),
+    neutralCount: getEl('neutralCount'),
+    avgConfidence: getEl('avgConfidence'),
+    
+    // Activity
+    activityList: getEl('logContainer'),
+    
+    // Modals
+    settingsModal: getEl('settingsModal'),
+    stockDetailModal: getEl('stockDetailModal'),
+    detailSymbol: getEl('detailSymbol'),
+    stockDetailBody: getEl('stockDetailBody'),
+    
+    // Settings
+    showIndicators: getEl('showIndicators'),
+    showPatterns: getEl('showPatterns'),
+    showPredictions: getEl('showPredictions'),
+    showInterpretations: getEl('showInterpretations'),
+    saveSettings: getEl('saveSettings'),
+    
+    // Theme
+    themeToggle: getEl('themeToggle'),
+    
+    // Export
+    exportJson: getEl('exportJson'),
+    exportPdf: getEl('exportPdf')
+    };
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    initElements();
     ui.init();
 });
 
