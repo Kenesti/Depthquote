@@ -865,7 +865,7 @@ const ui = {
                                 <div class="indicator-list">
                                     <div class="indicator-item">
                                         <span class="indicator-label">Predicted Price</span>
-                                        <span class="indicator-value">${utils.formatPrice(result.predictions?.combined?.predictions?.[0]?.average || result.recommendations?.priceTargets?.sell || 0)}</span>
+                                        <span class="indicator-value">${utils.formatPrice(result.predictions?.combined?.predictions?.[0]?.average || result.recommendations?.priceTargets?.sell || result.currentData?.close || 0)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1035,7 +1035,7 @@ const ui = {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Prediction</span>
-                            <span class="detail-value">${utils.formatPrice(result.predictions?.combined?.predictions?.[0]?.average || result.recommendations?.priceTargets?.sell || 0)}</span>
+                            <span class="detail-value">${utils.formatPrice(result.predictions?.combined?.predictions?.[0]?.average || result.recommendations?.priceTargets?.sell || currentData.close || 0)}</span>
                         </div>
                     </div>
                 </div>
@@ -1107,7 +1107,7 @@ const ui = {
                         overall: result.recommendations?.overall?.summary || '',
                         technical: result.technicalAnalysis?.summary?.interpretations || {},
                         patterns: result.patternAnalysis?.interpretation || '',
-                        predictions: result.predictions?.combined?.predictions?.[0]?.interpretation || result.recommendations?.priceTargets?.interpretation || ''
+                        predictions: result.predictions?.combined?.predictions?.[0]?.interpretation || result.recommendations?.priceTargets?.interpretation || `Combined prediction average: ${result.predictions?.combined?.predictions?.[0]?.average?.toFixed(2) || 'N/A'}`
                     }).map(([key, value]) => {
                         if (typeof value === 'object') {
                             return Object.entries(value).map(([subKey, subValue]) => `
